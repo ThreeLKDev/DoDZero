@@ -13,7 +13,17 @@
     "url": "https://github.com/ThreeLKDev/DoDZero"
   },
   "dependencies": {
-    "discord.js": "^11.5.1",
-    "dotenv": "^8.2.0"
+    "@discordjs/opus": "^0.1.0",
+    "@discordjs/uws": "^10.149.0",
+    "bufferutil": "^4.0.1",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "erlpack": "github:discordapp/erlpack",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "libsodium-wrappers": "^0.7.6",
+    "utf-8-validate": "^5.0.2",
+    "ytdl-core": "^2.1.7",
+    "zlib-sync": "^0.1.7"
   }
 }
