@@ -1,0 +1,19 @@
+{
+  "name": "dod-zero-discord-bot",
+  "version": "0.0.1",
+  "description": "Drag-On Dragoon Zero inspired Discord bot",
+  "main": "DoDZero.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ThreeLKDev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ThreeLKDev/DoDZero"
+  },
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0"
+  }
+}
