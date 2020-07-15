@@ -1,0 +1,331 @@
+
+{
+  "header": {
+    "event": "Allocation failed - JavaScript heap out of memory",
+    "trigger": "FatalError",
+    "filename": "report.20200708.093552.6740.0.001.json",
+    "dumpEventTime": "2020-07-08T09:35:52Z",
+    "dumpEventTimeStamp": "1594200952177",
+    "processId": 6740,
+    "cwd": "/root/DoDZero",
+    "commandLine": [
+      "node",
+      "/usr/local/lib/node_modules/pm2/lib/ProcessContainerFork.js"
+    ],
+    "nodejsVersion": "v12.2.0",
+    "glibcVersionRuntime": "2.27",
+    "glibcVersionCompiler": "2.17",
+    "wordSize": 64,
+    "arch": "x64",
+    "platform": "linux",
+    "componentVersions": {
+      "node": "12.2.0",
+      "v8": "7.4.288.21-node.17",
+      "uv": "1.28.0",
+      "zlib": "1.2.11",
+      "brotli": "1.0.7",
+      "ares": "1.15.0",
+      "modules": "72",
+      "nghttp2": "1.38.0",
+      "napi": "4",
+      "llhttp": "1.1.3",
+      "http_parser": "2.8.0",
+      "openssl": "1.1.1b",
+      "cldr": "35.1",
+      "icu": "64.2",
+      "tz": "2019a",
+      "unicode": "12.1"
+    },
+    "release": {
+      "name": "node",
+      "headersUrl": "https://nodejs.org/download/release/v12.2.0/node-v12.2.0-headers.tar.gz",
+      "sourceUrl": "https://nodejs.org/download/release/v12.2.0/node-v12.2.0.tar.gz"
+    },
+    "osName": "Linux",
+    "osRelease": "4.15.0-106-generic",
+    "osVersion": "#107-Ubuntu SMP Thu Jun 4 11:27:52 UTC 2020",
+    "osMachine": "x86_64",
+    "host": "discord-bot-dodzero"
+  },
+  "javascriptStack": {
+    "message": "No stack.",
+    "stack": [
+      "Unavailable."
+    ]
+  },
+  "nativeStack": [
+    {
+      "pc": "0x0000000000aa94ed",
+      "symbol": "report::TriggerNodeReport(v8::Isolate*, node::Environment*, char const*, char const*, std::string const&, v8::Local<v8::String>) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x000000000098d653",
+      "symbol": "node::OnFatalError(char const*, char const*) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000b077ce",
+      "symbol": "v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, bool) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000b07b49",
+      "symbol": "v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, bool) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000f12c05",
+      "symbol": " [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000f1d56b",
+      "symbol": "v8::internal::Heap::PerformGarbageCollection(v8::internal::GarbageCollector, v8::GCCallbackFlags) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000f1e287",
+      "symbol": "v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000f20d25",
+      "symbol": "v8::internal::Heap::AllocateRawWithRetryOrFail(int, v8::internal::AllocationType, v8::internal::AllocationAlignment) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000000eebd50",
+      "symbol": "v8::internal::Factory::NewFillerObject(int, bool, v8::internal::AllocationSpace) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x00000000011bdb5e",
+      "symbol": "v8::internal::Runtime_AllocateInNewSpace(int, unsigned long*, v8::internal::Isolate*) [node /root/DoDZero/DoDZero.js]"
+    },
+    {
+      "pc": "0x0000000001a86142",
+      "symbol": " [node /root/DoDZero/DoDZero.js]"
+    }
+  ],
+  "javascriptHeap": {
+    "totalMemory": 522928128,
+    "totalCommittedMemory": 520453912,
+    "usedMemory": 517040432,
+    "availableMemory": 9845496,
+    "memoryLimit": 528482304,
+    "heapSpaces": {
+      "read_only_space": {
+        "memorySize": 524288,
+        "committedMemory": 32024,
+        "capacity": 523976,
+        "used": 31712,
+        "available": 492264
+      },
+      "new_space": {
+        "memorySize": 4194304,
+        "committedMemory": 3181296,
+        "capacity": 2095904,
+        "used": 1180680,
+        "available": 915224
+      },
+      "old_space": {
+        "memorySize": 499245056,
+        "committedMemory": 498939504,
+        "capacity": 498933608,
+        "used": 498145680,
+        "available": 787928
+      },
+      "code_space": {
+        "memorySize": 688128,
+        "committedMemory": 493888,
+        "capacity": 394016,
+        "used": 394016,
+        "available": 0
+      },
+      "map_space": {
+        "memorySize": 1576960,
+        "committedMemory": 1107808,
+        "capacity": 653920,
+        "used": 653920,
+        "available": 0
+      },
+      "large_object_space": {
+        "memorySize": 16650240,
+        "committedMemory": 16650240,
+        "capacity": 16630968,
+        "used": 16630968,
+        "available": 0
+      },
+      "code_large_object_space": {
+        "memorySize": 49152,
+        "committedMemory": 49152,
+        "capacity": 3456,
+        "used": 3456,
+        "available": 0
+      },
+      "new_large_object_space": {
+        "memorySize": 0,
+        "committedMemory": 0,
+        "capacity": 2095904,
+        "used": 0,
+        "available": 2095904
+      }
+    }
+  },
+  "resourceUsage": {
+    "userCpuSeconds": 19.3184,
+    "kernelCpuSeconds": 1.41353,
+    "cpuConsumptionPercent": 2.23645,
+    "maxRss": 576618496,
+    "pageFaults": {
+      "IORequired": 11,
+      "IONotRequired": 207970
+    },
+    "fsActivity": {
+      "reads": 2304,
+      "writes": 0
+    }
+  },
+  "uvthreadResourceUsage": {
+    "userCpuSeconds": 6.32206,
+    "kernelCpuSeconds": 0.58001,
+    "cpuConsumptionPercent": 0.74456,
+    "fsActivity": {
+      "reads": 2304,
+      "writes": 0
+    }
+  },
+  "libuv": [
+  ],
+  "environmentVariables": {
+    "exit_code": "0",
+    "node_version": "12.2.0",
+    "versioning": "[object Object]",
+    "version": "0.0.1",
+    "unstable_restarts": "0",
+    "restart_time": "122",
+    "pm_id": "0",
+    "created_at": "1594200024205",
+    "axm_dynamic": "[object Object]",
+    "axm_options": "[object Object]",
+    "axm_monitor": "[object Object]",
+    "axm_actions": "",
+    "pm_uptime": "1594200024205",
+    "status": "launching",
+    "unique_id": "6133c6b8-05eb-4681-834a-56b1cee3f493",
+    "PM2_HOME": "/root/.pm2",
+    "NVM_DIR": "/root/.nvm",
+    "LS_COLORS": "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:",
+    "SSH_CONNECTION": "73.21.42.220 2674 144.202.29.204 22",
+    "LESSCLOSE": "/usr/bin/lesspipe %s %s",
+    "LANG": "en_US.UTF-8",
+    "NVM_CD_FLAGS": "",
+    "XDG_SESSION_ID": "67",
+    "USER": "root",
+    "PWD": "/root/DoDZero",
+    "HOME": "/root",
+    "SSH_CLIENT": "73.21.42.220 2674 22",
+    "XDG_DATA_DIRS": "/usr/local/share:/usr/share:/var/lib/snapd/desktop",
+    "NVM_IOJS_ORG_MIRROR": "https://iojs.org/dist",
+    "NVM_PATH": "/root/.nvm/versions/node/v12.2.0/lib/node",
+    "SSH_TTY": "/dev/pts/0",
+    "MAIL": "/var/mail/root",
+    "TERM": "cygwin",
+    "SHELL": "/bin/bash",
+    "NVM_BIN": "/root/.nvm/versions/node/v12.2.0/bin",
+    "NVM_NODEJS_ORG_MIRROR": "https://nodejs.org/dist",
+    "SHLVL": "1",
+    "MANPATH": "/root/.nvm/versions/node/v12.2.0/share/man:/usr/local/man:/usr/local/share/man:/usr/share/man",
+    "LOGNAME": "root",
+    "XDG_RUNTIME_DIR": "/run/user/0",
+    "PATH": "/root/.nvm/versions/node/v12.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "LESSOPEN": "| /usr/bin/lesspipe %s",
+    "_": "/usr/local/bin/pm2",
+    "OLDPWD": "/root",
+    "PM2_USAGE": "CLI",
+    "PM2_INTERACTOR_PROCESSING": "true",
+    "NODE_APP_INSTANCE": "0",
+    "vizion_running": "false",
+    "km_link": "false",
+    "pm_pid_path": "/root/.pm2/pids/DoDZero-0.pid",
+    "pm_err_log_path": "/root/.pm2/logs/DoDZero-error.log",
+    "pm_out_log_path": "/root/.pm2/logs/DoDZero-out.log",
+    "instances": "1",
+    "exec_mode": "fork_mode",
+    "exec_interpreter": "node",
+    "pm_cwd": "/root/DoDZero",
+    "pm_exec_path": "/root/DoDZero/DoDZero.js",
+    "node_args": "",
+    "name": "DoDZero",
+    "filter_env": "",
+    "namespace": "default",
+    "env": "[object Object]",
+    "merge_logs": "true",
+    "vizion": "true",
+    "autorestart": "true",
+    "watch": "false",
+    "instance_var": "NODE_APP_INSTANCE",
+    "pmx": "true",
+    "automation": "true",
+    "treekill": "true",
+    "username": "root",
+    "windowsHide": "true",
+    "kill_retry_time": "100",
+    "prev_restart_delay": "0",
+    "PREFIX": "!",
+    "OWNER": "307338440926691328",
+    "TOKEN": "NzI4MjM0OTY1MzMwMDM0NzA4.Xv3fNA.rDW-yiPyU8eY0_S04AgMJVM-lHo",
+    "YOUTUBE": "AIzaSyDSDLVQ4G333BzEyvUkrspAZNBZaT8RSsY",
+    "TENOR": "",
+    "YANDEX": "",
+    "GENIUS": "SLobcXsE7UkGGHpfB1B6QaqepVPvJpyF8ejZnJ1JoOt4ceimajUsyNId2nVpRHnv"
+  },
+  "userLimits": {
+    "core_file_size_blocks": {
+      "soft": 0,
+      "hard": "unlimited"
+    },
+    "data_seg_size_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "file_size_blocks": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "max_locked_memory_bytes": {
+      "soft": 16777216,
+      "hard": 16777216
+    },
+    "max_memory_size_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "open_files": {
+      "soft": 1048576,
+      "hard": 1048576
+    },
+    "stack_size_bytes": {
+      "soft": 8388608,
+      "hard": "unlimited"
+    },
+    "cpu_time_seconds": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "max_user_processes": {
+      "soft": 3693,
+      "hard": 3693
+    },
+    "virtual_memory_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    }
+  },
+  "sharedObjects": [
+    "linux-vdso.so.1",
+    "/lib/x86_64-linux-gnu/libdl.so.2",
+    "/lib/x86_64-linux-gnu/librt.so.1",
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6",
+    "/lib/x86_64-linux-gnu/libm.so.6",
+    "/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "/lib/x86_64-linux-gnu/libpthread.so.0",
+    "/lib/x86_64-linux-gnu/libc.so.6",
+    "/lib64/ld-linux-x86-64.so.2",
+    "/lib/x86_64-linux-gnu/libnss_files.so.2",
+    "/lib/x86_64-linux-gnu/libnss_dns.so.2",
+    "/lib/x86_64-linux-gnu/libresolv.so.2"
+  ]
+}

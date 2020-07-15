@@ -1,51 +1,118 @@
 require('dotenv').config();
-const { readdirSync } = require('fs');
-const { join } = require('path');
-const MusicClient = require('./struct/Client');
-const { Collection } = require('discord.js');
-const client = new MusicClient({ token: process.env.TOKEN, prefix: process.env.PREFIX });
+const { CommandoClient } = require('discord.js-commando');
+const { Structures } = require('discord.js');
+const loader = require('./loader.js');
+const path = require('path');
+const prefix = process.env.PREFIX;
+const token = process.env.TOKEN;
+const discord_owner_id = process.env.OWNER;
 
-const commandFiles = readdirSync(join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-	const command = require(join(__dirname, 'commands', `${file}`));
-	client.commands.set(command.name, command);
-}
-
-client.once('ready', () => console.log('READY!'));
-client.on('message', message => {
-	if (!message.content.startsWith(client.config.prefix) || message.author.bot) return;
-	const args = message.content.slice(client.config.prefix.length).split(/ +/);
-	const commandName = args.shift().toLowerCase();
-	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-	if (!command) return;
-	if (command.guildOnly && message.channel.type !== 'text') return message.reply('I can\'t execute that command inside DMs!');
-	if (command.args && !args.length) {
-		let reply = `You didn't provide any arguments, ${message.author}!`;
-		if (command.usage) reply += `\nThe proper usage would be: \`${client.config.prefix}${command.name} ${command.usage}\``;
-		return message.channel.send(reply);
-	}
-	if (!client.cooldowns.has(command.name)) {
-		client.cooldowns.set(command.name, new Collection());
-	}
-	const now = Date.now();
-	const timestamps = client.cooldowns.get(command.name);
-	const cooldownAmount = (command.cooldown || 3) * 1000;
-	if (timestamps.has(message.author.id)) {
-		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-		if (now < expirationTime) {
-			const timeLeft = (expirationTime - now) / 1000;
-			return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
-		}
-	}
-	timestamps.set(message.author.id, now);
-	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-
-	try {
-		command.execute(message, args);
-	} catch (error) {
-		console.error(error);
-		message.reply('there was an error trying to execute that command!');
-	}
+Structures.extend('Guild', function(Guild) {
+  class MusicGuild extends Guild {
+    constructor(client, data) {
+      super(client, data);
+      this.musicData = {
+        queue: [],
+        isPlaying: false,
+        nowPlaying: null,
+        songDispatcher: null,
+        volume: 1,
+	playlist: null,
+	playlistModified: false,
+	editSelection : null,
+	lastNowPlayingEmbed: null
+      };
+      this.triviaData = {
+        isTriviaRunning: false,
+        wasTriviaEndCalled: false,
+        triviaQueue: [],
+        triviaScore: new Map()
+      };
+      this.channelWatch = {
+        text: [],
+	voice: []
+      };
+    }
+  }
+  return MusicGuild;
 });
 
-client.login(client.config.token);
+const client = new CommandoClient({
+  commandPrefix: prefix,
+  owner: discord_owner_id
+});
+
+client.registry
+  .registerDefaultTypes()
+  .registerGroups([
+    ['music', 'Music Command Group'],
+    ['gifs', 'Gif Command Group'],
+    ['other', 'random types of commands group'],
+    ['guild', 'guild related commands']
+  ])
+  .registerDefaultGroups()
+  .registerDefaultCommands({
+    eval: true,
+    prefix: false,
+    commandState: false
+  })
+  .registerCommandsIn(path.join(__dirname, 'commands'));
+
+client.dispatcher.addInhibitor( msg => {
+	console.log(` -> ${msg.content}`);
+	let inhibit = false;
+	if(msg.guild === null) return;
+	const numChannels = msg.guild.channelWatch.text.length;
+	if(numChannels > 0 ) {
+		console.log(` -- -> numChannels > 0`);
+		inhibit = true;
+		for( let i = 0; i < numChannels; i++ ) {
+			if( msg.channel.id == msg.guild.channelWatch.text[i] ) {
+			console.log(` -- -> Channel allowed`);
+				inhibit = false;
+				break;
+			}
+		}
+		if( inhibit ) {
+			console.log(` -- -> Channel disallowed!`);
+			 return '(Not in recognized command channel)';
+		}
+	} else {
+		console.log(` -- -> numChannels <= 0 ?`);
+		if( msg.author.id != discord_owner_id ) {
+			console.log(` -- -> Author NOT owner`);
+			return '(Not in recognized command channel)';
+		} else console.log(` -- -> Author IS owner`);
+	}
+	console.log(` -- -> End`);
+//	if( inhibit ) return '(Not in recognized command channel)';
+});
+
+client.once('ready', () => {
+  console.log('Ready!');
+  client.user.setActivity(`${prefix}help`, {
+    type: 'WATCHING',
+    url: 'https://github.com/ThreeLKDev/DoDZero'
+  });
+  loader.loadAll(client);
+});
+
+client.on('voiceStateUpdate', async (___, newState) => {
+  if (
+    newState.member.user.bot &&
+    !newState.channelID &&
+    newState.guild.musicData.songDispatcher &&
+    newState.member.user.id == client.user.id
+  ) {
+    newState.guild.musicData.queue.length = 0;
+    newState.guild.musicData.songDispatcher.end();
+  }
+});
+
+client.on('guildMemberAdd', member => {
+  const channel = member.guild.channels.cache.find(ch => ch.name === 'general'); // change this to the channel name you want to send the greeting to
+  if (!channel) return;
+  channel.send(`Welcome ${member}!`);
+});
+
+client.login(token);
