@@ -378,6 +378,7 @@
         //TODO: lookup above
         let limit = ( size < maxSize ) ? size : maxSize;
         let msgCollector;
+        let errMsg = null;
         const songsListEmbed = new MessageEmbed()
           .setColor('#e9f931')
           .setTitle(message.guild.musicData.playlist.name);
@@ -419,9 +420,9 @@
           songsListEmbed.fields = [];
           for( let i = whichPage * maxSize; i < (whichPage + 1) * limit; i+=2 ) {
             songsListEmbed.addField(
-              `[${(i-(whichPage*maxSize)).toString(16)}]${message.guild.musicData.playlist.songs[i].title}`,
+              `[${(i).toString(16)}]${message.guild.musicData.playlist.songs[i].title}`,
               message.guild.musicData.playlist.songs[i+1]
-                ? `[${((i+1)-(whichPage*maxSize)).toString(16)}]${message.guild.musicData.playlist.songs[i+1].title}`
+                ? `[${(i+1).toString(16)}]${message.guild.musicData.playlist.songs[i+1].title}`
                 : `-- - -- - --`
             );
           }
@@ -469,12 +470,15 @@
               songsList.delete();
             if(controls && !controls.deleted)
               controls.delete();
+            if(errMsg && !errMsg.deleted) {
+              errMsg.delete();
+              errMsg == null;
+            }
             msgCollector.stop();
           });
         });
 
-        let errMsg = null;
-        msgCollector = new MessageCollector( message.channel, msg=>msg.author === message.author, { idle: 30000 } );
+        msgCollector = new MessageCollector( message.channel, msg=>msg.author === message.author, { idle: 60000 } );
         msgCollector.on('collect', async function(msg) {
           let action = 'Unknown.'
           if( errMsg ) { //Leftover errMsg from last pass
@@ -486,12 +490,12 @@
           if(arg[1] && parseInt(arg[1],16) != 'NaN') {
             selection = parseInt(arg[1], 16);
             if( selection < 0 || selection >= message.guild.musicData.playlist.songs.length ) {
-              errMsg = ['Invalid selector', `Please specify which song via the code to the left.`];
+              errMsg = ['Invalid selector: ' + arg[1], `Please specify which song via the code to the left.`];
             } else {
               if( arg[2] && parseInt(arg[2],16) != 'NaN') {
                 target = parseInt(arg[2],16);
-                if( target < 0 || target > message.guild.musicData.playlist.songs.length ) {
-                  //Target can be 1 more than we allow selector, for situations where you want to append something to the end.
+                if( target < 0 || target >= message.guild.musicData.playlist.songs.length ) {
+                  errMsg = ['Invalid selector: ' + arg[2], `Please specify which song via the code to the left.`];
                 }
               } else target = selection;
             }
@@ -499,16 +503,16 @@
             errMsg = ['No selector', 'Please specify which song via the code to the left.'];
           }
           if(!errMsg){
-            if('copy'.startsWith(arg[0]) && arg[0].length >= 2) {
+            if('copy'.startsWith(arg[0]) && arg[0].length >= 2 || arg[0] === 'cpy') {
               action = 'Copy';
               message.guild.musicData.playlist.songs.splice( target, 0,
                 message.guild.musicData.playlist.songs[selection] );
               songsListUpdate(page);
-            } else if ('delete'.startsWith(arg[0]) ) {
+            } else if ('delete'.startsWith(arg[0]) || 'remove'.startsWith(arg[0]) || arg[0] === 'rm' ) {
               action = 'Delete';
               message.guild.musicData.playlist.songs.splice( selection, 1 );
               songsListUpdate(page);
-            } else if ('move'.startsWith(arg[0]) ) {
+            } else if ('move'.startsWith(arg[0]) || arg[0] === 'mv') {
               action = 'Move';
               let temp = message.guild.musicData.playlist.songs.splice(selection,1)[0];
               message.guild.musicData.playlist.songs.splice(target,0,temp);
@@ -534,7 +538,8 @@
                   value: errMsg[1],
                   inline: false
                 }
-              ]
+              ],
+              footer: { text:arg.join(' ') }
             }});
           }
           msg.delete();
