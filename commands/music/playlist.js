@@ -16,7 +16,6 @@
       group: 'music',
       memberName: 'playlist',
       aliases: ['plist'],
-     guildOnly: true,
       description: 'Playlist controls. Say \'playlist help\' for a full rundown on how this command works.',
       args: [
         {
@@ -36,6 +35,14 @@
   }
 
   async run( message, { arg0, arg1 } ){
+    var musicData;
+    if(message.guild) {
+      console.log('Guild present.');
+      musicData = message.guild.musicData;
+    } else {
+      console.log('No guild, DM?');
+      return;
+    }
     const dir = `./guilds/${message.guild.id}/playlists`;
     if(arg0 == 'help') { // ---------------------------------------------- Help
       message.author.send(`Playlist command usage cheatsheet:
