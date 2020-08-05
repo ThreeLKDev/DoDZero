@@ -1,5 +1,8 @@
 const { Command } = require('discord.js-commando');
-const { MessageCollector } = require('discord.js');
+const got = require('got');
+const path = require('path');
+const { Image, createCanvas } = require('canvas');
+const { MessageAttachment } = require('discord.js');
 
 module.exports = class TestCommand extends Command {
   constructor(client){
@@ -12,6 +15,17 @@ module.exports = class TestCommand extends Command {
     });
   }
   async run( message ) {
-    message.reply('<@!307338440926691328>');
+    let set = [
+      { name: 'John', num: 4, color: 'red' },
+      { name: 'Jane', num: 3, color: 'blue'},
+      { name: 'Mary', num: 6, color: 'green'},
+      { name: 'Stu', num: 7, color: 'black'},
+      { name: 'Alice', num: 0, color: 'purple'}
+    ];
+    const tasks = set.map(TestCommand.testy);
+    const results = await Promise.all(tasks);
+  }
+  static testy( args ) {
+    return ( new Promise( () => console.log( [ args.name, args.num, args.color ] ) ) );
   }
 };
