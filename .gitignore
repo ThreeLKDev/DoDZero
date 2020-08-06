@@ -62,4 +62,6 @@ typings/
 
 # local files
 guilds/
-playlists/
+db/
+res/
+eorzea.ttf
