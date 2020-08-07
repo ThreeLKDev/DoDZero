@@ -107,6 +107,7 @@ module.exports = class WhoAmICommand extends Command {
     let processed = [];
     for( let i = 0; i < char.ClassJobs.length; i++ ) {
       let grid = jobLayout[char.ClassJobs[i].Job.Abbreviation];
+<<<<<<< Updated upstream
       // if( !processed.includes(char.ClassJobs[i].Class.Abbreviation) ) {
       //   imgArgs.push({
       //     startX: topDesc.x,
@@ -137,6 +138,8 @@ module.exports = class WhoAmICommand extends Command {
 
       console.log(`${char.ClassJobs[i].Job.Abbreviation} : ${char.ClassJobs[i].Job.ClassJobCategory.ID} '${char.ClassJobs[i].Job.ClassJobCategory.Name}'`);
 
+=======
+>>>>>>> Stashed changes
       if( char.ClassJobs[i].Class.Abbreviation != char.ClassJobs[i].Job.Abbreviation &&
       char.ClassJobs[i].Job.ID == char.ClassJobs[i].UnlockedState.ID ) {
         imgArgs.push({
