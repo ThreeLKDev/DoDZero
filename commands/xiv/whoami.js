@@ -9,24 +9,46 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const url = require('url');
-const iconSize = 50;
-const fontSize = 18;
+const iconSize = 25;//50
+const fontSize = 12;//18
+const iconCardWidth = iconSize + 6;//56;
+const iconCardHeight = iconSize + 20;//80
+const iconXAdjust = ( iconCardWidth - iconSize ) / 2
+const iconYAdjust = 3;
 const spacing = 5;
 const jobLayout = {
-  GLA: [  0, 0 ],  PLD: [  0, 0 ],  MRD: [  1, 0 ],
-  WAR: [  1, 0 ],  DRK: [  2, 0 ],  GNB: [  3, 0 ],
-  WHM: [  4, 0 ],  CNJ: [  4, 0 ],  SCH: [  5, 0 ],
-  AST: [  6, 0 ],  MNK: [  0, 1 ],  PGL: [  0, 1 ],
-  DRG: [  1, 1 ],  LNC: [  1, 1 ],  NIN: [  2, 1 ],
-  ROG: [  2, 1 ],  SAM: [  3, 1 ],  BRD: [  4, 1 ],
-  ARC: [  4, 1 ],  MCH: [  5, 1 ],  DNC: [  6, 1 ],
-  BLM: [  0, 2 ],  THM: [  0, 2 ],  SMN: [  1, 2 ],
-  ACN: [  1, 2 ],  RDM: [  2, 2 ],  BLU: [  6, 2 ],
-  CRP: [  0, 3 ],  BSM: [  1, 3 ],  ARM: [  2, 3 ],
-  GSM: [  3, 3 ],  LTW: [  4, 3 ],  WVR: [  5, 3 ],
-  ALC: [  6, 3 ],  CUL: [  0, 4 ],  MIN: [  4, 4 ],
-  BTN: [  5, 4 ],  FSH: [  6, 4 ]
+  //Tanks
+  GLA: [  0, 0 ],  PLD: [  0, 0 ],
+  MRD: [  1, 0 ],  WAR: [  1, 0 ],
+  DRK: [  2, 0 ],
+  GNB: [  3, 0 ],
+  //Healers
+  CNJ: [  4, 0 ],  WHM: [  4, 0 ],
+  SCH: [  5, 0 ],
+  AST: [  6, 0 ],
+  //Phys DPS
+  PGL: [  7, 0 ],  MNK: [  7, 0 ],
+  LNC: [  8, 0 ],  DRG: [  8, 0 ],
+  ROG: [  9, 0 ],  NIN: [  9, 0 ],
+  SAM: [ 10, 0 ],
+  //Ranged DPS
+  ARC: [ 11, 0 ],  BRD: [ 11, 0 ],
+  MCH: [  0, 1 ],
+  DNC: [  1, 1 ],
+  //Mages
+  THM: [  2, 1 ],  BLM: [  2, 1 ],
+  ACN: [  3, 1 ],  SMN: [  3, 1 ],
+  RDM: [  4, 1 ],
+  //Limited
+  BLU: [ 11, 1 ],
+  //Crafters
+  CRP: [  0, 2 ],  BSM: [  1, 2 ],  ARM: [  2, 2 ],
+  GSM: [  3, 2 ],  LTW: [  4, 2 ],  WVR: [  5, 2 ],
+  ALC: [  6, 2 ],  CUL: [  7, 2 ],
+  //Gatherers
+  MIN: [  9, 2 ],  BTN: [ 10, 2 ],  FSH: [ 11, 2 ]
 };
+const jobLayoutDimensions = { x: 0, y: 0 };
 
 module.exports = class WhoAmICommand extends Command {
   constructor(client){
@@ -37,12 +59,18 @@ module.exports = class WhoAmICommand extends Command {
       ownerOnly: true,
       description: 'Placeholder for current work-in-progess command.'
     });
+    //Set the jobLayoutDimensions object to the number of rows and columns
+    let jobs = Object.getOwnPropertyNames(jobLayout);
+    for( let i = 0; i < jobs.length; i++ ) {
+      jobLayoutDimensions.x = Math.max( jobLayoutDimensions.x, jobLayout[jobs[i]][0]+1 );
+      jobLayoutDimensions.y = Math.max( jobLayoutDimensions.y, jobLayout[jobs[i]][1]+1 );
+    }
   }
   async run( message ) {
     registerFont('eorzea.ttf', { family: 'Eorzea' });
     message.channel.startTyping();
     let res = await xiv.character.search('Aislinn Rei', {server: 'lamia'} );
-    if(!res) console.error("[!] Res is null? ");
+    if(!res) console.error("[whoami] Res is null? ");
     console.log('Querying...');
     let query = await xiv.character.get(
       res.Results[0].ID, {
@@ -105,6 +133,8 @@ module.exports = class WhoAmICommand extends Command {
 
     let imgArgs = [];
     let processed = [];
+    var usedSpots = Array.from( Array(jobLayoutDimensions.x), () => new Array(jobLayoutDimensions.y).fill(false) );
+    console.log(usedSpots);
     for( let i = 0; i < char.ClassJobs.length; i++ ) {
       let grid = jobLayout[char.ClassJobs[i].Job.Abbreviation];
 <<<<<<< Updated upstream
@@ -135,11 +165,14 @@ module.exports = class WhoAmICommand extends Command {
       //     processed.push( char.ClassJobs[i].Job.Abbreviation );
       // }
       //
+<<<<<<< HEAD
 
       console.log(`${char.ClassJobs[i].Job.Abbreviation} : ${char.ClassJobs[i].Job.ClassJobCategory.ID} '${char.ClassJobs[i].Job.ClassJobCategory.Name}'`);
 
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> c7089b829f95400b0907a95ddbc4362bce1f148e
       if( char.ClassJobs[i].Class.Abbreviation != char.ClassJobs[i].Job.Abbreviation &&
       char.ClassJobs[i].Job.ID == char.ClassJobs[i].UnlockedState.ID ) {
         imgArgs.push({
@@ -151,7 +184,9 @@ module.exports = class WhoAmICommand extends Command {
           useJobIcon: true,
           job: char.ClassJobs[i]
         });
-        } else {
+        usedSpots[grid[0]][grid[1]] = true;
+      } else if ( char.ClassJobs[i].Class.Abbreviation == char.ClassJobs[i].Job.Abbreviation ||
+      char.ClassJobs[i].Job.ID != char.ClassJobs[i].UnlockedState.ID ) {
           imgArgs.push({
             startX: shortDesc.x,
             startY: shortDesc.y,
@@ -161,6 +196,7 @@ module.exports = class WhoAmICommand extends Command {
             useJobIcon: false,
             job: char.ClassJobs[i]
           });
+          usedSpots[grid[0]][grid[1]] = true;
         }
       }
     ctx.font = `bold ${fontSize}pt sans-serif`;
@@ -168,12 +204,20 @@ module.exports = class WhoAmICommand extends Command {
     const imgTasks = imgArgs.map(WhoAmICommand.prepImage);
     const results = await Promise.all(imgTasks);
     for( let i = 0; i < results.length; i++ ) {
-      let xAdjust = ( results[i].width - results[i].image.width ) / 2;
       ctx.fillStyle = '#00000088';
-      ctx.fillRect( results[i].x, results[i].y, results[i].width, results[i].height );
+      ctx.fillRect( results[i].x, results[i].y, iconCardWidth, iconCardHeight );
       ctx.fillStyle = results[i].textColor;
-      ctx.fillText( results[i].text, results[i].x + results[i].width/2, results[i].y + ( results[i].height - ( fontSize * 0.5 ) ) );
-      ctx.drawImage(results[i].image, results[i].x + xAdjust, results[i].y, iconSize, iconSize );
+      ctx.fillText( results[i].text, results[i].x + iconCardWidth/2, results[i].y + iconYAdjust + ( iconCardHeight - ( fontSize * 0.5 ) ) );
+      ctx.drawImage(results[i].image, results[i].x + iconXAdjust, results[i].y + iconYAdjust, iconSize, iconSize );
+    }
+    console.log(usedSpots);
+    for( let x = 0; x < usedSpots.length; x++ ) {
+      for( let y = 0; y < usedSpots[x].length; y++ ) {
+        if(!usedSpots[x][y]) {
+          ctx.fillStyle = '#00000044';
+          ctx.fillRect( shortDesc.x + ( x * ( iconCardWidth + spacing ) ), shortDesc.y + ( y * ( iconCardHeight + spacing ) ), iconCardWidth, iconCardHeight );
+        }
+      }
     }
 
 
@@ -263,10 +307,8 @@ module.exports = class WhoAmICommand extends Command {
           iconImg.src = data;
         }
 
-          let width = 56;
-          let height = 80;
-          let posX = startX + ( gridX * ( width + spacing ) );
-          let posY = startY + ( gridY * ( height + spacing ) );
+          let posX = startX + ( gridX * ( iconCardWidth + spacing ) );
+          let posY = startY + ( gridY * ( iconCardHeight + spacing ) );
 
           let text, textColor;
           if( job.Level ) {
@@ -294,7 +336,7 @@ module.exports = class WhoAmICommand extends Command {
             iconImg.src = tempCanvas.toBuffer();
           }
 
-        resolve( { image: iconImg, x: posX, y: posY, text: text, textColor: textColor, width: width, height: height } );
+        resolve( { image: iconImg, x: posX, y: posY, text: text, textColor: textColor } );
       })
     } ) );
   }
