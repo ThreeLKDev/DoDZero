@@ -9,13 +9,18 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const url = require('url');
-const iconSize = 25;//50
-const fontSize = 12;//18
-const iconCardWidth = iconSize + 6;//56;
-const iconCardHeight = iconSize + 20;//80
+const townIconSize = 18;
+const iconSize = 12;//25//50
+const iconFontSize = 7;//12//18
+const descFontSize = 12;
+const topFontSize = 16;
+const iconCardWidth = iconSize + 3;//6;//56;
+const iconCardHeight = iconSize + (iconFontSize * 2);//20;//80
+const guardianIconSize = 18;
+const rankIconSize = 18;
 const iconXAdjust = ( iconCardWidth - iconSize ) / 2
-const iconYAdjust = 3;
-const spacing = 5;
+const iconYAdjust = 1;//3;
+const spacing = 3;//5
 const jobLayout = {
   //Tanks
   GLA: [  0, 0 ],  PLD: [  0, 0 ],
@@ -23,22 +28,22 @@ const jobLayout = {
   DRK: [  2, 0 ],
   GNB: [  3, 0 ],
   //Healers
-  CNJ: [  4, 0 ],  WHM: [  4, 0 ],
-  SCH: [  5, 0 ],
-  AST: [  6, 0 ],
-  //Phys DPS
-  PGL: [  7, 0 ],  MNK: [  7, 0 ],
-  LNC: [  8, 0 ],  DRG: [  8, 0 ],
-  ROG: [  9, 0 ],  NIN: [  9, 0 ],
-  SAM: [ 10, 0 ],
-  //Ranged DPS
-  ARC: [ 11, 0 ],  BRD: [ 11, 0 ],
-  MCH: [  0, 1 ],
-  DNC: [  1, 1 ],
+  CNJ: [  5, 0 ],  WHM: [  5, 0 ],
+  SCH: [  6, 0 ],
+  AST: [  7, 0 ],
   //Mages
-  THM: [  2, 1 ],  BLM: [  2, 1 ],
-  ACN: [  3, 1 ],  SMN: [  3, 1 ],
-  RDM: [  4, 1 ],
+  THM: [  9, 0 ],  BLM: [  9, 0 ],
+  ACN: [ 10, 0 ],  SMN: [ 10, 0 ],
+  RDM: [ 11, 0 ],
+  //Phys DPS
+  PGL: [  0, 1 ],  MNK: [  0, 1 ],
+  LNC: [  1, 1 ],  DRG: [  1, 1 ],
+  ROG: [  2, 1 ],  NIN: [  2, 1 ],
+  SAM: [  3, 1 ],
+  //Ranged DPS
+  ARC: [  5, 1 ],  BRD: [  5, 1 ],
+  MCH: [  6, 1 ],
+  DNC: [  7, 1 ],
   //Limited
   BLU: [ 11, 1 ],
   //Crafters
@@ -48,7 +53,7 @@ const jobLayout = {
   //Gatherers
   MIN: [  9, 2 ],  BTN: [ 10, 2 ],  FSH: [ 11, 2 ]
 };
-const jobLayoutDimensions = { x: 0, y: 0 };
+const jobLayoutDimensions = { x: 0, y: 0, width: 0, height: 0 };
 
 module.exports = class WhoAmICommand extends Command {
   constructor(client){
@@ -56,26 +61,59 @@ module.exports = class WhoAmICommand extends Command {
       name: 'whoami',
       group: 'xiv',
       memberName: 'whoami',
-      ownerOnly: true,
-      description: 'Placeholder for current work-in-progess command.'
+      description: 'Placeholder for current work-in-progess command.',
+      args: [
+        {
+          key: 'args',
+          prompt: '',
+          type: 'string',
+          default: ''
+        }
+      ]
     });
-    //Set the jobLayoutDimensions object to the number of rows and columns
+    //Set the jobLayoutDimensions object to the number of rows and columns,
+    // and the width and height of that many iconCards with spacing.
     let jobs = Object.getOwnPropertyNames(jobLayout);
     for( let i = 0; i < jobs.length; i++ ) {
       jobLayoutDimensions.x = Math.max( jobLayoutDimensions.x, jobLayout[jobs[i]][0]+1 );
       jobLayoutDimensions.y = Math.max( jobLayoutDimensions.y, jobLayout[jobs[i]][1]+1 );
     }
+    jobLayoutDimensions.width = ( jobLayoutDimensions.x * ( iconCardWidth + spacing ) ) + spacing + spacing;
+    jobLayoutDimensions.height = ( jobLayoutDimensions.y * ( iconCardHeight + spacing ) ) + spacing;
+    //We technically *could* hardcode this, but making it this way leaves us room
+    // to easily reorder and add in other classes down the line.
   }
-  async run( message ) {
+  async run( message, { args } ) {
+    let who = '';
+    let where = '';
+    if( args ) {
+      let split = args.split(' ');
+      if( split.length > 2 )
+        where = split[2]
+      who = `${split[0]} ${split[1]}`;
+    }
+    if( !who ) {
+      if( message.channel.guild ) { // Server
+        let nickname = message.channel.guild.members.cache.get( message.author.id ).nickname;
+        if( !nickname )
+          return message.say(`You don't have a nickname ( or I can't see it ). Try \`${process.env.PREFIX}portrait <characterFirstname> <characterLastname> <server>\` to see the first search result, or \`${process.env.PREFIX}iam <characterFirstname> <characterLastname> <server>\` to tell me who *you* are.`);
+        who = nickname;
+      } else { // DM
+        who = message.author.username;
+      }
+    }
+    if( !where && message.channel.guild )
+      where = 'lamia'; // TODO : Some config setting for 'default xiv server'?
+
     registerFont('eorzea.ttf', { family: 'Eorzea' });
     message.channel.startTyping();
-    let res = await xiv.character.search('Aislinn Rei', {server: 'lamia'} );
+    let res = await xiv.character.search(who, where ? {server: where} : {} );
     if(!res) console.error("[whoami] Res is null? ");
     console.log('Querying...');
     let query = await xiv.character.get(
       res.Results[0].ID, {
         extended: true,
-          data : 'FC,CJ',
+          data : 'FC,CJ,MIMO,AC',
         //  columns: ['Character.Name','Character.ID','Character.Portrait',
         //  'Character.Title.Name', 'Character.Race.Name', 'Character.Tribe.Name',
         //  'Character.GuardianDeity.Name','Character.GrandCompany.Company.Name',
@@ -93,78 +131,76 @@ module.exports = class WhoAmICommand extends Command {
     let fc = query.FreeCompany;
     console.log("Query:");
     console.log(query);
-
+    console.log(char.GrandCompany);
+    //Load the character's portrait
     const profile = await loadImage( `${char.Portrait}` );
-    const canvas = createCanvas(profile.width*2, profile.height);
-    const ctx = canvas.getContext('2d');
+
+    //While we don't need all that empty space, we also have to leave space for the bigger races
+    //We keep the 'mugshot' dimensions in one place to better space the rest of the card
 
     const mug = {
-      width : Math.floor(profile.width * ( 2/3 )),
-      height : Math.floor(profile.height/2),
-      x : Math.floor(profile.width/6),
-      y : Math.floor(profile.height/12),
+      sliceWidth : Math.floor(profile.width * ( 2/3 )),
+      sliceHeight : Math.floor(profile.height/2),
+      get width() { return this.sliceWidth / 2 },
+      get height() { return this.sliceHeight / 2 },
+      sliceX : Math.floor(profile.width/6),
+      sliceY : Math.floor(profile.height/12),
+      x : spacing,
+      y : spacing + topFontSize + spacing
     };
+
+    //Size the main canvas
+    const canvas = createCanvas(profile.width*1.25, topFontSize + mug.height + jobLayoutDimensions.height);
+    const ctx = canvas.getContext('2d');
+
+    ctx.font = `${topFontSize}pt serif`;
+    ctx.textAlign = 'left';
+    let text = `Eorzean Adventuring Permit Registration No. ${char.ID}`.toUpperCase();
+    let measure = ctx.measureText(text);
+    console.log(measure);
+
+    const adventurerTag = {
+      x: 0,
+      y: 0,
+      width: canvas.width,
+      height: measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent + spacing + spacing
+    };
+    mug.y = spacing + adventurerTag.height;
+    canvas.height = mug.height + mug.y + jobLayoutDimensions.height;
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font = `${topFontSize}pt serif`;
+    ctx.fillStyle = '#888888ff';
+    ctx.fillText(text, adventurerTag.x + spacing, adventurerTag.y + adventurerTag.height - spacing);
+    //ShortDesc is for the class list, below the mugshot
     const shortDesc = {
-      x: spacing,
-      y: spacing + mug.height + spacing,
+      x: mug.x,
+      y: mug.y + mug.height + spacing,
       width: mug.width,
       get height() { return canvas.height - ( this.y + spacing ) }
     };
+
+    //LongDesc is for all the other nonsense, to the right.
     const longDesc = {
-      x: mug.width + ( spacing * 3 ),
-      y: spacing,
-      width: canvas.width - ( mug.width + ( spacing * 5 ) ),
+      x: mug.x + mug.width + ( spacing * 2 ),
+      y: mug.y,
+      width: canvas.width - ( mug.width + ( spacing * 4 ) + townIconSize ),
       height: canvas.height - ( spacing * 2 ),
     };
 
-    ctx.drawImage(profile, 0, 0, profile.width, profile.height);
-    const clip = ctx.getImageData(mug.x, mug.y, mug.width, mug.height);
     ctx.fillStyle = '#222222';
-    // ctx.fillRect(0,0,canvas.width,mug.height + mug.y + spacing);
-    ctx.fillRect(0,0, mug.width + spacing + spacing, canvas.height);
+    ctx.fillRect(mug.x - spacing,mug.y - spacing, mug.x + mug.width + spacing, canvas.height);
     ctx.fillStyle = '#181818';
-    // ctx.fillRect(0,bottomDesc.y, canvas.width, canvas.height - (bottomDesc.y) );
-    ctx.fillRect(mug.width + spacing + spacing, 0, canvas.width - ( mug.width + spacing + spacing ), canvas.height );
-    ctx.putImageData(clip,spacing,spacing);
-
-    // char.ClassJobs.forEach( job => {
-    //   WhoAmICommand.drawJob( ctx, job, topDesc.x, topDesc.y, spacing);
-    // });
+    ctx.fillRect(mug.x + mug.width + spacing, mug.y - spacing, canvas.width - ( mug.width + spacing + spacing + townIconSize ), canvas.height );
+    ctx.drawImage(profile, mug.sliceX, mug.sliceY, mug.sliceWidth, mug.sliceHeight, mug.x, mug.y, mug.width, mug.height );
 
     let imgArgs = [];
     let processed = [];
     var usedSpots = Array.from( Array(jobLayoutDimensions.x), () => new Array(jobLayoutDimensions.y).fill(false) );
-    console.log(usedSpots);
     for( let i = 0; i < char.ClassJobs.length; i++ ) {
       let grid = jobLayout[char.ClassJobs[i].Job.Abbreviation];
-      // if( !processed.includes(char.ClassJobs[i].Class.Abbreviation) ) {
-      //   imgArgs.push({
-      //     startX: topDesc.x,
-      //     startY: topDesc.y,
-      //     gridX: grid[0],
-      //     gridY: grid[1],
-      //     spacing: spacing,
-      //     useJobIcon: false,
-      //     job: char.ClassJobs[i]
-      //   });
-      //   processed.push( char.ClassJobs[i].Class.Abbreviation );
-      // }
-      // if( char.ClassJobs[i].Class.Abbreviation != char.ClassJobs[i].Job.Abbreviation && !
-      // processed.includes( char.ClassJobs[i].Job.Abbreviation ) ) {
-      //   let grid = jobLayout[char.ClassJobs[i].Job.Abbreviation];
-      //     imgArgs.push({
-      //       startX: topDesc.x,
-      //       startY: topDesc.y,
-      //       gridX: grid[0],
-      //       gridY: grid[1],
-      //       spacing: spacing,
-      //       useJobIcon: true,
-      //       job: char.ClassJobs[i]
-      //     });
-      //     processed.push( char.ClassJobs[i].Job.Abbreviation );
-      // }
-      //
-      console.log(`${char.ClassJobs[i].Job.Abbreviation} : ${char.ClassJobs[i].Job.ClassJobCategory.ID} '${char.ClassJobs[i].Job.ClassJobCategory.Name}'`);
+
+      // console.log(`${char.ClassJobs[i].Job.Abbreviation} : ${char.ClassJobs[i].Job.ClassJobCategory.ID} '${char.ClassJobs[i].Job.ClassJobCategory.Name}'`);
       if( char.ClassJobs[i].Class.Abbreviation != char.ClassJobs[i].Job.Abbreviation &&
       char.ClassJobs[i].Job.ID == char.ClassJobs[i].UnlockedState.ID ) {
         imgArgs.push({
@@ -191,7 +227,7 @@ module.exports = class WhoAmICommand extends Command {
           usedSpots[grid[0]][grid[1]] = true;
         }
       }
-    ctx.font = `bold ${fontSize}pt sans-serif`;
+    ctx.font = `bold ${iconFontSize}pt sans-serif`;
     ctx.textAlign = 'center';
     const imgTasks = imgArgs.map(WhoAmICommand.prepImage);
     const results = await Promise.all(imgTasks);
@@ -199,10 +235,9 @@ module.exports = class WhoAmICommand extends Command {
       ctx.fillStyle = '#00000088';
       ctx.fillRect( results[i].x, results[i].y, iconCardWidth, iconCardHeight );
       ctx.fillStyle = results[i].textColor;
-      ctx.fillText( results[i].text, results[i].x + iconCardWidth/2, results[i].y + iconYAdjust + ( iconCardHeight - ( fontSize * 0.5 ) ) );
+      ctx.fillText( results[i].text, results[i].x + iconCardWidth/2, results[i].y + iconYAdjust + ( iconCardHeight - ( iconFontSize * 0.5 ) ) );
       ctx.drawImage(results[i].image, results[i].x + iconXAdjust, results[i].y + iconYAdjust, iconSize, iconSize );
     }
-    console.log(usedSpots);
     for( let x = 0; x < usedSpots.length; x++ ) {
       for( let y = 0; y < usedSpots[x].length; y++ ) {
         if(!usedSpots[x][y]) {
@@ -214,53 +249,91 @@ module.exports = class WhoAmICommand extends Command {
 
 
     let fontsize = 0;
-    ctx.fillStyle = '#ffffff44';
-    ctx.strokeStyle = '#00000044';
+    ctx.fillStyle = '#ffffff88';
+    ctx.strokeStyle = '#00000088';
     do {
       fontsize++;
       ctx.font = `${fontsize}px eorzea`;
-    } while ( ctx.measureText(char.ID).width < mug.width);
+    } while ( ctx.measureText(char.ID).width < mug.width );
+
       fontsize = fontsize - 1;
       ctx.font = `${fontsize}px eorzea`;
       ctx.textAlign = 'left';
-      // ctx.rotate( ( 90 * Math.PI / 180 ) );
-      ctx.fillText(char.ID, 0, mug.height);
-      ctx.strokeText(char.ID, 0, mug.height);
-      // ctx.rotate( - ( 90 * Math.PI / 180 ) );
+      ctx.fillText(char.ID, mug.x, mug.y + mug.height - spacing);
+      ctx.strokeText(char.ID, mug.x, mug.y + mug.height - spacing);
 
-      fontsize = 51;
-      let widthLim = mug.width / 3;
+      let widthLim = mug.width / 8;
+      text = `${char.DC}`;
+      measure = ctx.measureText(text);
+      ctx.rotate( 90 * Math.PI / 180 );
+      fontsize = 0;
       do {
         fontsize++;
         ctx.font = `${fontsize}px eorzea`;
-      } while ( ctx.measureText(`${char.DC}`).width < widthLim);
+        measure = ctx.measureText(text);
+      } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
       fontsize--;
       ctx.font = `${fontsize}px eorzea`;
-      let ascent = ctx.measureText(`${char.DC}`).actualBoundingBoxAscent;
-      ctx.fillText(`${char.DC}`, spacing, spacing + spacing + ascent);
-      ctx.strokeText(`${char.DC}`, spacing, spacing + spacing + ascent);
+      let descent = ctx.measureText(text).actualBoundingBoxDescent;
+      ctx.fillText(text, (mug.y + spacing), -(spacing + spacing + descent) );
+      ctx.strokeText(text, (mug.y + spacing), -(spacing + spacing + descent) );
 
       ctx.textAlign = 'right';
-      fontsize = 51;
+      text = `${char.Server}`;
+      measure = ctx.measureText(text);
+      ctx.rotate( -180 * Math.PI / 180 );
+      fontsize = 0;
       do {
         fontsize++;
         ctx.font = `${fontsize}px eorzea`;
-      } while ( ctx.measureText(`${char.Server}`).width < widthLim);
+        measure = ctx.measureText(text);
+      } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
       fontsize--;
 
       ctx.font = `${fontsize}px eorzea`;
-      ascent = ctx.measureText(`${char.Server}`).actualBoundingBoxAscent;
-      ctx.fillText(`${char.Server}`, mug.width + spacing, spacing + spacing + ascent);
-      ctx.strokeText(`${char.Server}`, mug.width + spacing, spacing + spacing + ascent);
+      descent = ctx.measureText(text).actualBoundingBoxDescent;
+      ctx.fillText(text, -( mug.y + spacing), mug.width - descent );
+      ctx.strokeText(text, -( mug.y + spacing), mug.width - descent );
+
+      let town = await loadImage( `${host}${char.Town.Icon}` );
+      ctx.drawImage( town, -(canvas.height), canvas.width - townIconSize, townIconSize, townIconSize );
+      text = `Issued in ${char.Town.Name}`.toUpperCase();
+      ctx.font = `${descFontSize}pt serif`;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#888888ff';
+      measure = ctx.measureText( text );
+      ctx.fillText( text, -(canvas.height - ( townIconSize + spacing ) ), canvas.width - (measure.actualBoundingBoxDescent + spacing) );
+      ctx.rotate( 90 * Math.PI / 180 );
 
 
-      // ctx.font = `${fontSize}pt serif`;
-      // ctx.textAlign = 'left';
-      // ctx.fillStyle = '#aaaaaaff';
-      // ascent = ctx.measureText(`Race: ${char.Race.Name}`).actualBoundingBoxAscent;
-      // ctx.fillText(`Race: ${char.Race.Name}`, spacing, bottomDesc.y + spacing + ascent );
-      WhoAmICommand.putText( ctx, `Race: ${char.Race.Name}, ${char.Tribe.Name}`, `${fontSize}pt serif`,
-         'left', '#aaaaaaff', longDesc.x, longDesc.y + spacing );
+      // let guardian = await loadImage(`${host}${char.GuardianDeity.Icon}`);
+      // console.log(guardian);
+      // ctx.drawImage( guardian, longDesc.x + longDesc.width - guardianIconSize, longDesc.y, guardianIconSize, guardianIconSize );
+      //
+      // let rank = await loadImage(`${host}${char.GrandCompany.Rank.Icon}`);
+      // console.log(rank);
+      // ctx.drawImage(rank, mug.x + mug.width - rankIconSize, mug.y + mug.height - rankIconSize, rankIconSize, rankIconSize );
+
+      let name = char.Name;
+      if( char.Title.Name ) {
+        if(char.TitleTop)
+          name = '\'' + char.Title.Name + '\' ' + name;
+        else
+          name = name + ' \'' + char.Title.Name + '\'';
+      }
+
+      WhoAmICommand.putText( ctx,
+        `Name: ${name}\n`+
+        `Nameday: ${char.Nameday}\n`+
+        `Race: ${char.Race.Name}, ${char.Tribe.Name}\n`+
+        `Guardian: ${char.GuardianDeity.Name}\n`+
+        `Rank: ${char.GrandCompany.Rank ? char.GrandCompany.Rank.Name+', '+char.GrandCompany.Company.Name : 'N/A'}`,
+        `${descFontSize}pt serif`,
+        'left', '#aaaaaaff', longDesc.x, longDesc.y + spacing );
+      // WhoAmICommand.putText( ctx, `Guardian: ${char.GuardianDeity.Name}`, `${descFontSize}pt serif`,
+      //   'left', '#aaaaaaff', longDesc.x, longDesc.y + spacing + descFontSize);
+
+
 
       const attachment = new MessageAttachment(canvas.toBuffer(), `${char.Name}.png`);
 
