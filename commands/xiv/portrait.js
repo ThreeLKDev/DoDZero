@@ -44,6 +44,7 @@ module.exports = class PortraitCommand extends Command {
     }
     if( !where && message.channel.guild )
       where = 'lamia'; // TODO : Some config setting for 'default xiv server'?
+      
     message.channel.startTyping();
     let res = await xiv.character.search(who, where ? {server: where} : {} );
     if( res.Results.length <= 0 ) {
