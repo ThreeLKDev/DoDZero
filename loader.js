@@ -17,14 +17,15 @@ async function load(guild) {
     const channelWatch = JSON.parse(data.toString());
     let props = Object.getOwnPropertyNames(channelWatch);
     for( let i = 0; i < props.length; i++ ) {
+      console.log(`\t->${props[i]}`);
       guild[ props[i] ] = channelWatch[ props[i] ];
     }
     // guild.channelWatch.text = channelWatch.text;
     // guild.channelWatch.voice = channelWatch.voice;
     // guild.channelWatch.pixiv = channelWatch.pixiv;
-    console.log('Loaded text channels: ' + guild.channelWatch.text.toString());
-    console.log('Loaded voice channels: ' + guild.channelWatch.voice.toString());
-    console.log('Loaded pixiv channels: ' + guild.channelWatch.pixiv.toString());
+    // console.log('Loaded text channels: ' + guild.channelWatch.text.toString());
+    // console.log('Loaded voice channels: ' + guild.channelWatch.voice.toString());
+    // console.log('Loaded pixiv channels: ' + guild.channelWatch.pixiv.toString());
   });
 }
 
@@ -37,15 +38,15 @@ function loadSync(guild) {
     const channelWatch = JSON.parse(data.toString());
     let props = Object.getOwnPropertyNames(channelWatch);
     for( let i = 0; i < props.length; i++ ) {
+      console.log(`\t->${props[i]}`);
       guild[ props[i] ] = channelWatch[ props[i] ];
     }
-    console.log(props);
     // guild.channelWatch.text = channelWatch.text;
     // guild.channelWatch.voice = channelWatch.voice;
     // guild.channelWatch.pixiv = channelWatch.pixiv;
-    console.log('Loaded text channels: ' + guild.channelWatch.text.toString());
-    console.log('Loaded voice channels: ' + guild.channelWatch.voice.toString());
-    console.log('Loaded pixiv channels: ' + guild.channelWatch.pixiv.toString());
+    // console.log('Loaded text channels: ' + guild.channelWatch.text.toString());
+    // console.log('Loaded voice channels: ' + guild.channelWatch.voice.toString());
+    // console.log('Loaded pixiv channels: ' + guild.channelWatch.pixiv.toString());
   } catch (err) {
     if( err.code === 'ENOENT') {
       fs.mkdir(dir+'/playlists', { recursive: true }, (err2)=>{ if (err2) throw err2});
