@@ -45,48 +45,60 @@
     }
     const dir = `./guilds/${message.guild.id}/playlists`;
     if(arg0 == 'help') { // ---------------------------------------------- Help
-      message.author.send(`Playlist command usage cheatsheet:
-      \t\`${prefix}playlist <info|c|create|l|load|a|add|play|list|e|edit|s|save|delete> <args>\`
-      Command alias is 'plist'
+      message.author.send({ embed: { title: `Playlist command usage cheatsheet`,
+        description: `\`${prefix}playlist <info|create|load|add|play|list|edit|save|delete> <args>\`\nCommand alias is 'plist'\n\nNOTE: THIS COMMAND IS STILL A WORK IN PROGRESS. Most if not all of this is not fully implemented yet.`,
+        fields: [
+          {
+            name: `**${prefix}playlist info**`,
+            value: `Lists info for currently loaded playlist (if one is loaded).`
+          },
+          {
+            name: `**${prefix}playlist create** *<playlist_name>*`,
+            value: `Will create a new playlist with the given name. If a playlist is not currently loaded, will set this new playlist as the loaded playlist. Also polls the user for a brief description of the playlist.`
+          },
+          {
+            name: `**${prefix}playlist load** *<playlist_name>*`,
+            value: `Will load the named playlist, if one exists. If not, will prompt to create instead.`
+          },
+          {
+            name: `**${prefix}playlist add**`,
+            value: `Adds the current song (if one is playing) to the currently loaded playlist (if one is loaded).`
+          },
+          {
+            name: `**${prefix}playlist add** *<song>*`,
+            value: `If *song* is a valid YouTube URL, adds it to the currently loaded playlist (if one is loaded).\n`+
+            `If not, treats it as a search query and returns the top 5 results. The chosen result is added instead.`
+          },
+          {
+            name: `**${prefix}playlist play**`,
+            value: `Adds all songs in the playlist to the queue, and starts playing. Must be in a voice channel.`
+          },
+          {
+            name: `**${prefix}playlist play shuffle**`,
+            value: `Adds all songs in a random order to the queue, and starts playing. Must be in a voice channel.`
+          },
+          {
+            name: `**${prefix}playlist list**`,
+            value: `Lists all of the songs in the currently loaded playlist (if one is loaded).`
+          },
+          {
+            name: `**${prefix}playlist edit** *<songs|description|help>*`,
+            value: `Allows the user to edit the contents of the currently loaded playlist.\n`+
+            `Calling with 'songs' will display a numbered list of the songs in this playlist, allowing the user to Move, Copy, or Remove the song.\n`+
+            `Calling with 'description' displays the current description of the playlist, and prompts the user to input a new one.\n`+
+            `Calling with 'help' will output a detailed explanation of how the edit command works.`
+          },
+          {
+            name: `**${prefix}playlist save**`,
+            value: `Saves the currently loaded playlist (if one is loaded) to file.`
+          },
+          {
+            name: `**${prefix}playlist delete**`,
+            value: `Asks for confirmation before removing the currently-loaded playlist.`
+          }
 
-      NOTE: THIS COMMAND IS STILL A WORK IN PROGRESS. Most if not all of this is not fully implemented yet.
-      Breakdown:
-      \t**${prefix}playlist info**
-      Lists info for currently loaded playlist (if one is loaded).
-
-      \t**${prefix}playlist create** *<playlist_name>*
-      Will create a new playlist with the given name. If a playlist is not currently loaded, will set this new playlist as the loaded playlist. Also polls the user for a brief description of the playlist.
-
-      \t**${prefix}playlist load** *<playlist_name>*
-      Will load the named playlist, if one exists. If not, will prompt to create instead.
-
-      \t**${prefix}playlist add**
-      Adds the current song (if one is playing) to the currently loaded playlist (if one is loaded).
-
-      \t**${prefix}playlist add** *<song>*
-      If the given 'song' is a valid YouTube URL, adds it to the currently loaded playlist (if one is loaded).
-      If it's *not*, treats it as a search query and returns the top 5 results. The chosen result is added instead.
-
-      \t**${prefix}playlist play**
-      Adds all songs in the playlist to the queue, and starts playing. Must be in a voice channel.
-
-      \t**${prefix}playlist play shuffle**
-      Adds all songs in a random order to the queue, and starts playing. Must be in a voice channel.
-
-      \t**${prefix}playlist list**
-      Lists all of the songs in the currently loaded playlist (if one is loaded).
-
-      \t**${prefix}playlist edit** *<songs|description|help>*
-      Allows the user to edit the contents of the currently loaded playlist.
-      Calling with 's', 'song', or 'songs' will display a numbered list of the songs in this playlist, allowing the user to Move, Copy, or Remove the song.
-      Calling with 'd', 'desc', or 'description' displays the current description of the playlist, and prompts the user to input a new one.
-      Calling with 'h' or 'help' will output a detailed explanation of how the edit command works.
-
-      \t**${prefix}playlist save**
-      Saves the currently loaded playlist (if one is loaded) to file.
-
-      \t**${prefix}playlist delete**
-      Self-explanatory, asks for confirmation before removing the currently-loaded playlist.`);
+        ]
+      } });
   } else if( arg0 === 'info' ){ // --------------------------------------- Info
     if( message.guild.musicData.playlist && message.guild.musicData.playlist != 'undefined' ) {
       const embed = new MessageEmbed()
