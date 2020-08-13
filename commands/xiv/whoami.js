@@ -54,6 +54,8 @@ const jobLayout = {
   MIN: [  9, 2 ],  BTN: [ 10, 2 ],  FSH: [ 11, 2 ]
 };
 const jobLayoutDimensions = { x: 0, y: 0, width: 0, height: 0 };
+var maxMounts = 0;
+var maxMinions = 380;
 
 module.exports = class WhoAmICommand extends Command {
   constructor(client){
@@ -61,7 +63,7 @@ module.exports = class WhoAmICommand extends Command {
       name: 'whoami',
       group: 'xiv',
       memberName: 'whoami',
-      description: 'Placeholder for current work-in-progess command.',
+      description: 'Displays Lodestone data for a given character.',
       args: [
         {
           key: 'args',
@@ -80,6 +82,10 @@ module.exports = class WhoAmICommand extends Command {
     }
     jobLayoutDimensions.width = ( jobLayoutDimensions.x * ( iconCardWidth + spacing ) ) + spacing + spacing;
     jobLayoutDimensions.height = ( jobLayoutDimensions.y * ( iconCardHeight + spacing ) ) + spacing;
+    ( async () => {
+      let mounts = await xiv.search('',{indexes:"Mount",filters:"Order>=0",limit:1});
+      maxMounts = mounts.Pagination.ResultsTotal;
+    } )();
     //We technically *could* hardcode this, but making it this way leaves us room
     // to easily reorder and add in other classes down the line.
   }
@@ -108,7 +114,7 @@ module.exports = class WhoAmICommand extends Command {
     registerFont('eorzea.ttf', { family: 'Eorzea' });
     message.channel.startTyping();
     let res = await xiv.character.search(who, where ? {server: where} : {} );
-    if(!res) console.error("[whoami] Res is null? ");
+    if(!res) console.error("[whoami] Res is null? Arg(s) : " + args);
     console.log('Querying...');
     let query = await xiv.character.get(
       res.Results[0].ID, {
@@ -129,9 +135,10 @@ module.exports = class WhoAmICommand extends Command {
     );
     let char = query.Character;
     let fc = query.FreeCompany;
+    let numMinions = query.Minions.length;
+    let numMounts = query.Mounts.length;
     console.log("Query:");
     console.log(query);
-    console.log(char.GrandCompany);
     //Load the character's portrait
     const profile = await loadImage( `${char.Portrait}` );
 
@@ -155,7 +162,7 @@ module.exports = class WhoAmICommand extends Command {
 
     ctx.font = `${topFontSize}pt serif`;
     ctx.textAlign = 'left';
-    let text = `Eorzean Adventuring Permit Registration No. ${char.ID}`.toUpperCase();
+    let text = `Eorzean Adventuring Permit Registration ID No. ${char.ID}`.toUpperCase();
     let measure = ctx.measureText(text);
     console.log(measure);
 
@@ -247,53 +254,45 @@ module.exports = class WhoAmICommand extends Command {
       }
     }
 
+    ctx.fillStyle = '#ffffff44';
+    ctx.strokeStyle = '#00000044';
+    ctx.textAlign = 'left';
+    ctx.font = WhoAmICommand.fitText( ctx, char.ID, mug.width, 'eorzea' );
+    ctx.fillText(char.ID, mug.x, mug.y + mug.height - spacing);
+    ctx.strokeText(char.ID, mug.x, mug.y + mug.height - spacing);
 
+    let widthLim = mug.width / 8;
+    text = `${char.DC}`;
+    measure = ctx.measureText(text);
+    ctx.rotate( 90 * Math.PI / 180 );
     let fontsize = 0;
-    ctx.fillStyle = '#ffffff88';
-    ctx.strokeStyle = '#00000088';
     do {
       fontsize++;
       ctx.font = `${fontsize}px eorzea`;
-    } while ( ctx.measureText(char.ID).width < mug.width );
-
-      fontsize = fontsize - 1;
-      ctx.font = `${fontsize}px eorzea`;
-      ctx.textAlign = 'left';
-      ctx.fillText(char.ID, mug.x, mug.y + mug.height - spacing);
-      ctx.strokeText(char.ID, mug.x, mug.y + mug.height - spacing);
-
-      let widthLim = mug.width / 8;
-      text = `${char.DC}`;
       measure = ctx.measureText(text);
-      ctx.rotate( 90 * Math.PI / 180 );
-      fontsize = 0;
-      do {
-        fontsize++;
-        ctx.font = `${fontsize}px eorzea`;
-        measure = ctx.measureText(text);
-      } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
-      fontsize--;
-      ctx.font = `${fontsize}px eorzea`;
-      let descent = ctx.measureText(text).actualBoundingBoxDescent;
-      ctx.fillText(text, (mug.y + spacing), -(spacing + spacing + descent) );
-      ctx.strokeText(text, (mug.y + spacing), -(spacing + spacing + descent) );
+    } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
+    fontsize--;
+    ctx.font = `${fontsize}px eorzea`;
+    let descent = ctx.measureText(text).actualBoundingBoxDescent;
+    ctx.fillText(text, (mug.y + spacing), -(spacing + spacing + descent) );
+    ctx.strokeText(text, (mug.y + spacing), -(spacing + spacing + descent) );
 
-      ctx.textAlign = 'right';
-      text = `${char.Server}`;
+    ctx.textAlign = 'right';
+    text = `${char.Server}`;
+    measure = ctx.measureText(text);
+    ctx.rotate( -180 * Math.PI / 180 );
+    fontsize = 0;
+    do {
+      fontsize++;
+      ctx.font = `${fontsize}px eorzea`;
       measure = ctx.measureText(text);
-      ctx.rotate( -180 * Math.PI / 180 );
-      fontsize = 0;
-      do {
-        fontsize++;
-        ctx.font = `${fontsize}px eorzea`;
-        measure = ctx.measureText(text);
-      } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
-      fontsize--;
+    } while ( measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent < widthLim);
+    fontsize--;
 
-      ctx.font = `${fontsize}px eorzea`;
-      descent = ctx.measureText(text).actualBoundingBoxDescent;
-      ctx.fillText(text, -( mug.y + spacing), mug.width - descent );
-      ctx.strokeText(text, -( mug.y + spacing), mug.width - descent );
+    ctx.font = `${fontsize}px eorzea`;
+    descent = ctx.measureText(text).actualBoundingBoxDescent;
+    ctx.fillText(text, -( mug.y + spacing), mug.width - descent );
+    ctx.strokeText(text, -( mug.y + spacing), mug.width - descent );
 
       let town = await loadImage( `${host}${char.Town.Icon}` );
       ctx.drawImage( town, -(canvas.height), canvas.width - townIconSize, townIconSize, townIconSize );
@@ -305,6 +304,17 @@ module.exports = class WhoAmICommand extends Command {
       ctx.fillText( text, -(canvas.height - ( townIconSize + spacing ) ), canvas.width - (measure.actualBoundingBoxDescent + spacing) );
       ctx.rotate( 90 * Math.PI / 180 );
 
+      ctx.translate( longDesc.x + ( longDesc.width / 2 ), longDesc.y + ( longDesc.height / 2 ) );
+      ctx.rotate( -Math.atan2( longDesc.height, longDesc.width ) );
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#88888822';
+      text = char.Town.Name;
+      ctx.font = WhoAmICommand.fitText( ctx, text, longDesc.width, 'eorzea', -8 );
+      measure = ctx.measureText(text);
+      ctx.fillText( text, 0, measure.actualBoundingBoxDescent );
+      ctx.rotate( Math.atan2( longDesc.height, longDesc.width ) );
+      ctx.translate( -( longDesc.x + ( longDesc.width / 2 ) ), -( longDesc.y + ( longDesc.height / 2 ) ) );
+
 
       // let guardian = await loadImage(`${host}${char.GuardianDeity.Icon}`);
       // console.log(guardian);
@@ -314,6 +324,7 @@ module.exports = class WhoAmICommand extends Command {
       // console.log(rank);
       // ctx.drawImage(rank, mug.x + mug.width - rankIconSize, mug.y + mug.height - rankIconSize, rankIconSize, rankIconSize );
 
+      ctx.fillStyle = '#aaaaaaff';
       let name = char.Name;
       if( char.Title.Name ) {
         if(char.TitleTop)
@@ -323,11 +334,13 @@ module.exports = class WhoAmICommand extends Command {
       }
 
       WhoAmICommand.putText( ctx,
-        `Name: ${name}\n`+
-        `Nameday: ${char.Nameday}\n`+
-        `Race: ${char.Race.Name}, ${char.Tribe.Name}\n`+
-        `Guardian: ${char.GuardianDeity.Name}\n`+
-        `Rank: ${char.GrandCompany.Rank ? char.GrandCompany.Rank.Name+', '+char.GrandCompany.Company.Name : 'N/A'}`,
+        `\nName:\n\t${name}\n`+
+        `Nameday:\n\t${char.Nameday}\n`+
+        `Race:\n\t${char.Race.Name}, ${char.Tribe.Name}\n`+
+        `Guardian:\n\t${char.GuardianDeity.Name}\n`+
+        `Rank:\n\t${char.GrandCompany.Rank ? char.GrandCompany.Rank.Name+', '+char.GrandCompany.Company.Name : 'Not enlisted.'}\n`+
+        `Minions:\n\t${numMinions} registered of the possible ${maxMinions} ( ${Math.floor(( numMinions / maxMinions ) * 100)}% )\n`+
+        `Mounts:\n\t${numMounts} registered of the possible ${maxMounts} ( ${Math.floor(( numMounts / maxMounts ) * 100)}% )`,
         `${descFontSize}pt serif`,
         'left', '#aaaaaaff', longDesc.x, longDesc.y + spacing );
       // WhoAmICommand.putText( ctx, `Guardian: ${char.GuardianDeity.Name}`, `${descFontSize}pt serif`,
@@ -339,6 +352,19 @@ module.exports = class WhoAmICommand extends Command {
 
       message.channel.stopTyping();
       message.say(attachment);
+  }
+  static fitText( ctx, text, width, fontFamily, mod ) {
+    if( !mod || mod === undefined )
+      mod = -1;
+    let oldFont = ctx.font;
+    let fontsize = 0;
+    do {
+      fontsize++;
+      ctx.font = `${fontsize}px ${fontFamily}`;
+    } while ( ctx.measureText(text).width < width );
+    fontsize = fontsize + mod;
+    ctx.font = oldFont;
+    return `${fontsize}px ${fontFamily}`;
   }
   static putText( ctx, text, font, align, color, x, y ) {
     ctx.font = font;
