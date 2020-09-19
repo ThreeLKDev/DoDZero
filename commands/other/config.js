@@ -17,40 +17,41 @@ module.exports = class ConfigCommand extends Command {
           key: 'action',
           prompt: `Usage: \`${prefix}config save\` or \`${prefix}config load\``,
           type: 'string'
-        },
-        {
-          key: 'verbose',
-          prompt: '',
-          type: 'string',
-          default: 'true',
         }
       ]
     });
   }
   async run(message, { action, verbose } ){
+    if( verbose === null || verbose === undefined )
+      verbose = true;
+    else {
+      if( typeof verbose === 'string' ) {
+        verbose = verbose.toLowerCase();
+        verbose = ( verbose === 'true' || verbose === 'verbose' );
+      } else verbose = ( verbose ? true : false );
+    }
     action = action.toLowerCase();
-    verbose = verbose.toLowerCase();
-    let isVerbose = ( verbose === 'true' || verbose === 'verbose' );
     if( action === 'save' ) {
       const guildData = {
-        'text' : message.guild.channelWatch.text,
-        'voice' : message.guild.channelWatch.voice,
-        'pixiv' : message.guild.channelWatch.pixiv
+        channelWatch: message.guild.channelWatch || null,
+        xiv:  message.guild.xiv || null,
+        freeCompany: message.guild.freeCompany || null,
+        autoRole: { hasTask: message.guild.autoRole.hasTask }
       }
-      if( isVerbose )
+      if( verbose )
         message.say('Let me write that down...');
       const data = JSON.stringify(guildData);
       fs.writeFile(`./guilds/${message.guild.id}/guild.json`, data, (err) => {
         if(err) throw err;
-        if( isVerbose )
+        if( verbose )
           message.say('Done.');
       });
     }
     if( action === 'load' ) {
-      if(isVerbose)
+      if(verbose)
         message.say('Loading...');
       loader.load(message.guild);
-      if(isVerbose)
+      if(verbose)
         message.say('Done.');
     }
   }
