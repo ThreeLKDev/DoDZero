@@ -36,7 +36,7 @@ module.exports = class ConfigCommand extends Command {
         channelWatch: message.guild.channelWatch || null,
         xiv:  message.guild.xiv || null,
         freeCompany: message.guild.freeCompany || null,
-        autoRole: { hasTask: message.guild.autoRole.hasTask }
+        autoRole: message.guild.autoRole || null
       }
       if( verbose )
         message.say('Let me write that down...');
