@@ -39,16 +39,15 @@ Structures.extend('Guild', function(Guild) {
         pixiv: []
       };
       this.autoRole = {
-        hasTask: false,
-        task: null,
-        roleMap: new Map()
+        ignoreRoles: [],
+        progressionRoles: []
       };
       this.freeCompany = {
         ID: null,
         Crest: [],
         Name: null,
         Slogan: null
-      }
+      };
       this.autosave = null;
       this.sayToLog = null;
     }
@@ -126,19 +125,16 @@ client.once('ready', () => {
         });
       } else console.log('Failed.');
     }
-    if( guild.autoRole.hasTask && guild.channelWatch.log) {
-      ( async () => {
-        let msg = await guild.channels.cache.get( guild.channelWatch.log ).send("Restarting `autorole` task!");
-        client.registry.commands.get('autorole').run(msg);
-      })();
-    }
     guild.sayToLog = async function(message){
+      if( !guild.channelWatch.log )
+        return;
       return await guild.channels.cache.get( guild.channelWatch.log ).send(message);
     };
-    guild.autosave = cron.schedule('0 23 * * *', async () => {
+    guild.autosave = cron.schedule('0 4 * * *', async () => {
       console.log('[Main] Autosaving');
-      let msg = await guild.sayToLog('Daily autosave completed!');
       client.registry.commands.get('config').run(msg, {action:'save',verbose:'false'});
+      let msg = await guild.sayToLog('Daily autosave completed, now running autorole.');
+      client.registry.commands.get('autorole').run(msg);
       console.log('[Main] Finished.');
     });
   });
