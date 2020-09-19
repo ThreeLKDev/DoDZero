@@ -4,6 +4,7 @@ const XIVAPI = require('xivapi-js');
 const xiv = new XIVAPI({ private_key: process.env.XIVAPI });
 const { MessageEmbed, MessageAttachment, MessageCollector } = require('discord.js');
 const prefix = process.env.PREFIX;
+const sqlite3 = require('sqlite3').verbose();
 
 module.exports = class IAmCommand extends Command {
   constructor(client){
@@ -59,6 +60,37 @@ module.exports = class IAmCommand extends Command {
         });
         let identifyMsg = await message.channel.send({ embed: embed });
         console.log('Sent?');
+        let _this = this;
+        let correct = function(character) {
+          let member = message.guild.members.cache.get( message.author.id );
+          member.roles.add( message.guild.roles.cache.get( message.guild.xiv.iamRole ) );
+          member.setNickname(character.Name);
+          message.say({ embed: {
+            title: `Welcome, ${character.Name.split(' ')[0]}!`,
+            description: `Success: We've added you to the books!`,
+            thumbnail: { url: character.Avatar },
+            fields: [
+              {
+                name: '**Role**',
+                value: ` + <@&${message.guild.xiv.iamRole}>`,
+                inline: true
+              },
+              {
+                name: '**Nickname**',
+                value: `Changed to ${character.Name}`,
+                inline: true
+              },
+              {
+                name: '**Commands**',
+                value: `Show off with \`${prefix}portrait\` and \`${prefix}whoami\``,
+                inline: true
+              }
+            ],
+            footer: { text: `Go say 'hi' in General!` }
+          } });
+          // Update user database.
+          _this.client.sqlite.registerMember(null, message.author.id, character.ID, message.guild.id);
+        };
 
         //Anonymous async functions are cool, okay?
         ( async () => {
@@ -70,32 +102,7 @@ module.exports = class IAmCommand extends Command {
         collector.on('collect',async ( reaction, user ) => {
           identifyMsg.reactions.cache.get(reaction.emoji.name).users.remove(user.id);
           if( reaction.emoji.name === '✅' ) {
-            let member = message.guild.members.cache.get( message.author.id );
-            member.roles.add( message.guild.roles.cache.get( message.guild.xiv.iamRole ) );
-            member.setNickname(res.Results[0].Name);
-            message.say({ embed: {
-              title: `Welcome, ${res.Results[0].Name.split(' ')[0]}!`,
-              description: `Success: We've added you to the books!`,
-              thumbnail: { url: res.Results[0].Avatar },
-              fields: [
-                {
-                  name: '**Role**',
-                  value: ` + <@&${message.guild.xiv.iamRole}>`,
-                  inline: true
-                },
-                {
-                  name: '**Nickname**',
-                  value: `Changed to ${res.Results[0].Name}`,
-                  inline: true
-                },
-                {
-                  name: '**Commands**',
-                  value: `Show off with \`${prefix}portrait\` and \`${prefix}whoami\``,
-                  inline: true
-                }
-              ],
-              footer: { text: `Go say 'hi' in General!` }
-            } });
+            correct(res.Results[0]);
             collector.stop();
           } else if ( reaction.emoji.name === '❌' ) {
             const max = Math.min( 50, res.Results.length);
@@ -116,32 +123,7 @@ module.exports = class IAmCommand extends Command {
               let arg = msg.content.trim().split(' ');
               let selection = parseInt(arg[0]);
               if( selection != 'NaN' && selection < max && selection >= 0 ) {
-                let member = message.guild.members.cache.get( message.author.id );
-                member.roles.add( message.guild.roles.cache.get( message.guild.xiv.iamRole ) );
-                member.setNickname(res.Results[selection].Name);
-                message.say({ embed: {
-                  title: `Welcome, ${res.Results[selection].Name.split(' ')[0]}!`,
-                  description: `Success: We've added you to the books!`,
-                  thumbnail: { url: res.Results[selection].Avatar },
-                  fields: [
-                    {
-                      name: '**Role**',
-                      value: ` + <@&${message.guild.xiv.iamRole}>`,
-                      inline: true
-                    },
-                    {
-                      name: '**Nickname**',
-                      value: `Changed to ${res.Results[selection].Name}`,
-                      inline: true
-                    },
-                    {
-                      name: '**Commands**',
-                      value: `Show off with \`${prefix}portrait\` and \`${prefix}whoami\``,
-                      inline: true
-                    }
-                  ],
-                  footer: { text: `Go say 'hi' in General!` }
-                } });
+                correct(res.Results[selection]);
                 msgCollector.stop();
               } else if( arg[0] == 'cancel' ) {
                 msgCollector.stop();
