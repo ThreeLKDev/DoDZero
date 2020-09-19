@@ -18,7 +18,7 @@ module.exports = class WatchCommand extends Command {
           type: 'string',
           validate: function(channelType) {
             channelType = channelType.toLowerCase();
-            return channelType == 'text' || channelType == 'voice' || channelType == 'pixiv';
+            return channelType == 'text' || channelType == 'voice' || channelType == 'pixiv' || channelType == 'log';
           }
         },
         {
@@ -62,6 +62,10 @@ module.exports = class WatchCommand extends Command {
         message.guild.channelWatch.pixiv.push(channel.id);
         message.say(`Understood, now tracking ${channel.name} [${channel.id}]`);
       } else return message.say('That channel is already being tracked.');
+    } else if( channelType == 'log' ){
+      const channel = mentionedChannel ? mentionedChannel : message.channel;
+      message.guild.channelWatch.log = channel.id;
+      message.say(`Log channel set as ${channel.name} [${channel.id}]`);
     }
   }
 }
