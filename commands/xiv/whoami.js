@@ -115,22 +115,27 @@ module.exports = class WhoAmICommand extends Command {
     message.channel.startTyping();
     let res = await xiv.character.search(who, where ? {server: where} : {} );
     if(!res) console.error("[whoami] Res is null? Arg(s) : " + args);
+    if( res.Results && res.Results.length == 0 ) {
+      // Retry in case of a hiccup.
+      console.log(`[whoami] Results were empty, retrying... `);
+      res = await xiv.character.search(who, where ? {server: where} : {} );
+    }
     console.log('Querying...');
     let query = await xiv.character.get(
       res.Results[0].ID, {
         extended: true,
           data : 'FC,CJ,MIMO,AC',
-        //  columns: ['Character.Name','Character.ID','Character.Portrait',
-        //  'Character.Title.Name', 'Character.Race.Name', 'Character.Tribe.Name',
-        //  'Character.GuardianDeity.Name','Character.GrandCompany.Company.Name',
-        //  'Character.GrandCompany.Rank.Name', 'FreeCompany.Name',
-        //  'Character.DC', 'Character.Server', 'Character.ClassJobs.*.Level',
-        // 'Character.ClassJobs.*.IsSpecialised','Character.ClassJobs.*.Class.Name',
-        // 'Character.ClassJobs.*.Class.Icon','Character.ClassJobs.*.Job.Icon',
-        // 'Character.ClassJobs.*.UnlockedState.ID', 'Character.ClassJobs.*.Class.ID',
-        // 'Character.ClassJobs.*.Job.ID', 'Character.ClassJobs.*.Job.Abbreviation',
-        // 'Character.ClassJobs.*.ExpLevelMax', 'Character.ID', 'Character.ActiveClassJob.Job.Abbreviation',
-        // 'Character.ClassJobs.*.Class.Abbreviation' ].join(',')
+         columns: ['Character.Name','Character.ID','Character.Portrait',
+         'Character.Title.Name', 'Character.Race.Name', 'Character.Tribe.Name',
+         'Character.GuardianDeity.Name','Character.GrandCompany.Company.Name',
+         'Character.GrandCompany.Rank.Name', 'FreeCompany.Name',
+         'Character.DC', 'Character.Server', 'Character.ClassJobs.*.Level',
+        'Character.ClassJobs.*.IsSpecialised','Character.ClassJobs.*.Class.Name',
+        'Character.ClassJobs.*.Class.Icon','Character.ClassJobs.*.Job.Icon',
+        'Character.ClassJobs.*.UnlockedState.ID', 'Character.ClassJobs.*.Class.ID',
+        'Character.ClassJobs.*.Job.ID', 'Character.ClassJobs.*.Job.Abbreviation',
+        'Character.ClassJobs.*.ExpLevelMax', 'Character.ID', 'Character.ActiveClassJob.Job.Abbreviation',
+        'Character.ClassJobs.*.Class.Abbreviation', 'Character.Nameday', 'Character.Town.Icon', 'Character.Town.Name', 'Minions.*.Name', 'Mounts.*.Name' ].join(',')
       }
     );
     let char = query.Character;
@@ -172,7 +177,7 @@ module.exports = class WhoAmICommand extends Command {
       width: canvas.width,
       height: measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent + spacing + spacing
     };
-    mug.y = spacing + adventurerTag.height;
+    mug.y = adventurerTag.height;
     canvas.height = mug.height + mug.y + jobLayoutDimensions.height;
     ctx.fillStyle = '#222222';
     ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -196,9 +201,9 @@ module.exports = class WhoAmICommand extends Command {
     };
 
     ctx.fillStyle = '#222222';
-    ctx.fillRect(mug.x - spacing,mug.y - spacing, mug.x + mug.width + spacing, canvas.height);
+    ctx.fillRect(mug.x - spacing,mug.y, mug.x + mug.width + spacing, canvas.height);
     ctx.fillStyle = '#181818';
-    ctx.fillRect(mug.x + mug.width + spacing, mug.y - spacing, canvas.width - ( mug.width + spacing + spacing + townIconSize ), canvas.height );
+    ctx.fillRect(mug.x + mug.width + spacing, mug.y, canvas.width - ( mug.width + spacing + spacing + townIconSize ), canvas.height );
     ctx.drawImage(profile, mug.sliceX, mug.sliceY, mug.sliceWidth, mug.sliceHeight, mug.x, mug.y, mug.width, mug.height );
 
     let imgArgs = [];
@@ -207,7 +212,6 @@ module.exports = class WhoAmICommand extends Command {
     for( let i = 0; i < char.ClassJobs.length; i++ ) {
       let grid = jobLayout[char.ClassJobs[i].Job.Abbreviation];
 
-      // console.log(`${char.ClassJobs[i].Job.Abbreviation} : ${char.ClassJobs[i].Job.ClassJobCategory.ID} '${char.ClassJobs[i].Job.ClassJobCategory.Name}'`);
       if( char.ClassJobs[i].Class.Abbreviation != char.ClassJobs[i].Job.Abbreviation &&
       char.ClassJobs[i].Job.ID == char.ClassJobs[i].UnlockedState.ID ) {
         imgArgs.push({
