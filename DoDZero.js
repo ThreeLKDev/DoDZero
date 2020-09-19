@@ -4,6 +4,7 @@ const { Structures, MessageCollector } = require('discord.js');
 const SQliteWrapper = require('./sqlitewrapper.js');
 const loader = require('./loader.js');
 const path = require('path');
+const cron = require('node-cron');
 const prefix = process.env.PREFIX;
 const token = process.env.TOKEN;
 const discord_owner_id = process.env.OWNER;
@@ -32,10 +33,24 @@ Structures.extend('Guild', function(Guild) {
         triviaScore: new Map()
       };
       this.channelWatch = {
+        log: null,
         text: [],
         voice: [],
         pixiv: []
       };
+      this.autoRole = {
+        hasTask: false,
+        task: null,
+        roleMap: new Map()
+      };
+      this.freeCompany = {
+        ID: null,
+        Crest: [],
+        Name: null,
+        Slogan: null
+      }
+      this.autosave = null;
+      this.sayToLog = null;
     }
   }
   return MusicGuild;
@@ -110,8 +125,22 @@ client.once('ready', () => {
             client.registry.commands.get('pixiv').run(msg, {pixivUrl: isPixivUrl[1], which: isPixivUrl[2] });
         });
       } else console.log('Failed.');
-
     }
+    if( guild.autoRole.hasTask && guild.channelWatch.log) {
+      ( async () => {
+        let msg = await guild.channels.cache.get( guild.channelWatch.log ).send("Restarting `autorole` task!");
+        client.registry.commands.get('autorole').run(msg);
+      })();
+    }
+    guild.sayToLog = async function(message){
+      return await guild.channels.cache.get( guild.channelWatch.log ).send(message);
+    };
+    guild.autosave = cron.schedule('0 23 * * *', async () => {
+      console.log('[Main] Autosaving');
+      let msg = await guild.sayToLog('Daily autosave completed!');
+      client.registry.commands.get('config').run(msg, {action:'save',verbose:'false'});
+      console.log('[Main] Finished.');
+    });
   });
 });
 
