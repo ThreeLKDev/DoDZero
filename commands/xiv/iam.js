@@ -25,7 +25,7 @@ module.exports = class IAmCommand extends Command {
   }
     async run( message, { args } ) {
       if( !message.guild.xiv.iamRole )
-        return message.say(`No role has been defined yet. Use \`${prefix}xiv-config iam-role <role>\` before using this command!`);
+        return message.say(`No role has been defined yet. Have a server mod use \`${prefix}xiv-config iam-role <role>\` before using this command!`);
       console.log('BEGIN');
       let where = '';
       let split = args.split(' ');
@@ -106,7 +106,7 @@ module.exports = class IAmCommand extends Command {
             for( let i = 0; i < max; i+=2 ) {
               charEmbed.addField( `[${i}] ${res.Results[i].Name}`,
                 res.Results[i+1]
-                ? `[${i+1}] ${res.Results[i].Name}`
+                ? `[${i+1}] ${res.Results[i+1].Name}`
                 : '-- - -- - --' );
             }
             const listMessage = await message.channel.send({embed: charEmbed});
@@ -120,9 +120,9 @@ module.exports = class IAmCommand extends Command {
                 member.roles.add( message.guild.roles.cache.get( message.guild.xiv.iamRole ) );
                 member.setNickname(res.Results[selection].Name);
                 message.say({ embed: {
-                  title: `Welcome, ${res.Results[0].Name.split(' ')[0]}!`,
+                  title: `Welcome, ${res.Results[selection].Name.split(' ')[0]}!`,
                   description: `Success: We've added you to the books!`,
-                  thumbnail: { url: res.Results[0].Avatar },
+                  thumbnail: { url: res.Results[selection].Avatar },
                   fields: [
                     {
                       name: '**Role**',
@@ -131,7 +131,7 @@ module.exports = class IAmCommand extends Command {
                     },
                     {
                       name: '**Nickname**',
-                      value: `Changed to ${res.Results[0].Name}`,
+                      value: `Changed to ${res.Results[selection].Name}`,
                       inline: true
                     },
                     {
@@ -161,5 +161,4 @@ module.exports = class IAmCommand extends Command {
 
       message.channel.stopTyping();
     }
-
 };
