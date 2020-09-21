@@ -40,7 +40,8 @@ Structures.extend('Guild', function(Guild) {
       };
       this.autoRole = {
         ignoreRoles: [],
-        progressionRoles: []
+        progressionRoles: [],
+        awayRoles: [],
       };
       this.freeCompany = {
         ID: null,
@@ -128,14 +129,16 @@ client.once('ready', () => {
     guild.sayToLog = async function(message){
       if( !guild.channelWatch.log )
         return;
-      return await guild.channels.cache.get( guild.channelWatch.log ).send(message);
+      else return await guild.channels.cache.get( guild.channelWatch.log ).send(message);
     };
-    guild.autosave = cron.schedule('0 4 * * *', async () => {
-      console.log('[Main] Autosaving');
-      client.registry.commands.get('config').run(msg, {action:'save',verbose:'false'});
+    guild.autosave = cron.schedule('0 11 * * *', async () => {
+      console.log('[Main] Daily tasks starting');
+      guild.sayToLog("Starting daily tasks...");
       let msg = await guild.sayToLog('Daily autosave completed, now running autorole.');
+      client.registry.commands.get('config').run(msg, {action:'save',verbose:'false'});
       client.registry.commands.get('autorole').run(msg);
-      console.log('[Main] Finished.');
+      console.log('[Main] Daily tasks finished.');
+      guild.sayToLog("Daily tasks finished.");
     });
   });
 });
