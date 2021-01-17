@@ -17,11 +17,17 @@ module.exports = class ConfigCommand extends Command {
           key: 'action',
           prompt: `Usage: \`${prefix}config save\` or \`${prefix}config load\``,
           type: 'string'
+        },
+        {
+          key: 'args',
+          prompt: '',
+          type: 'string',
+          default: ''
         }
       ]
     });
   }
-  async run(message, { action, verbose } ){
+  async run(message, { action, verbose, args } ){
     if( verbose === null || verbose === undefined )
       verbose = true;
     else {
@@ -36,7 +42,8 @@ module.exports = class ConfigCommand extends Command {
         channelWatch: message.guild.channelWatch || null,
         xiv:  message.guild.xiv || null,
         freeCompany: message.guild.freeCompany || null,
-        autoRole: message.guild.autoRole || null
+        autoRole: message.guild.autoRole || null,
+        moderators: message.guild.moderators || []
       }
       if( verbose )
         message.say('Let me write that down...');
@@ -54,5 +61,31 @@ module.exports = class ConfigCommand extends Command {
       if(verbose)
         message.say('Done.');
     }
+    if( action === 'set' ){
+      if( !message.guild.checkIsMod( message.author ) )
+      return message.say("I... don't think you're allowed to do that. Go find an adult.");
+      let splArgs = args.split(' ');
+      let target = splArgs[0];
+      let value = splArgs[1];
+      if( target.length >= 3 && 'mod-role'.startsWith(target) ) {
+        let mention = value.match(/<@&(\d+)>/);
+        if( !mention ) {
+          message.guild.roles.cache.some( role => {
+            if( role.name.toLowerCase() === value.toLowerCase() ) {
+              mention = role.id;
+              return true;
+            } else return false;
+          });
+        } else mention = mention[1];
+
+        if( mention ) {
+          message.guild.moderators.push(mention);
+          message.say(`Moderator role list changed. List length is now ${message.guild.moderators.length}; don't forget to save.`);
+        } else return message.say("Couldn't find that role.");
+      }
+    }
+
+    //console.log(this);
+    //message.say("Unrecognized subcommand.");
   }
 };
