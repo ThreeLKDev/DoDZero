@@ -14,11 +14,11 @@ async function load(guild) {
       } else throw err;
     }
     if(!data || data == "undefined" ) return;
-    const channelWatch = JSON.parse(data.toString());
-    let props = Object.getOwnPropertyNames(channelWatch);
+    const guildData = JSON.parse(data.toString());
+    let props = Object.getOwnPropertyNames(guildData);
     for( let i = 0; i < props.length; i++ ) {
       console.log(`\t->${props[i]}`);
-      guild[ props[i] ] = channelWatch[ props[i] ];
+      guild[ props[i] ] = guildData[ props[i] ];
     }
     // guild.channelWatch.text = channelWatch.text;
     // guild.channelWatch.voice = channelWatch.voice;
@@ -35,11 +35,11 @@ function loadSync(guild) {
   const file = `${dir}/guild.json`;
   try {
     let data = fs.readFileSync(file,'utf-8');
-    const channelWatch = JSON.parse(data.toString());
-    let props = Object.getOwnPropertyNames(channelWatch);
+    const guildData = JSON.parse(data.toString());
+    let props = Object.getOwnPropertyNames(guildData);
     for( let i = 0; i < props.length; i++ ) {
       console.log(`\t->${props[i]}`);
-      guild[ props[i] ] = channelWatch[ props[i] ];
+      guild[ props[i] ] = guildData[ props[i] ];
     }
     // guild.channelWatch.text = channelWatch.text;
     // guild.channelWatch.voice = channelWatch.voice;
