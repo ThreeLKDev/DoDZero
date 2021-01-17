@@ -15,17 +15,17 @@ module.exports = class TestCommand extends Command {
     });
   }
   async run( message ) {
-    let set = [
-      { name: 'John', num: 4, color: 'red' },
-      { name: 'Jane', num: 3, color: 'blue'},
-      { name: 'Mary', num: 6, color: 'green'},
-      { name: 'Stu', num: 7, color: 'black'},
-      { name: 'Alice', num: 0, color: 'purple'}
-    ];
-    const tasks = set.map(TestCommand.testy);
-    const results = await Promise.all(tasks);
-  }
-  static testy( args ) {
-    return ( new Promise( () => console.log( [ args.name, args.num, args.color ] ) ) );
+    let member = message.author;
+    let channel = message.channel;
+
+    /*
+    Welcome message
+    `Welcome to no-garDen of Dragons, ${member.user.username}`
+    `Go read through #rules-and-info, then `
+
+    */
+
+
+
   }
 };
