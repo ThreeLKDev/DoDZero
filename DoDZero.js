@@ -42,6 +42,12 @@ Structures.extend('Guild', function(Guild) {
         ignoreRoles: [],
         progressionRoles: [],
         awayRoles: [],
+        skipped: {
+          missingNickname: [],
+          invalidCharID: [],
+          outrank: [],
+          away: []
+        }
       };
       this.freeCompany = {
         ID: null,
@@ -51,6 +57,8 @@ Structures.extend('Guild', function(Guild) {
       };
       this.autosave = null;
       this.sayToLog = null;
+      this.moderators = [];
+      this.checkIsMod = null;
     }
   }
   return MusicGuild;
@@ -131,12 +139,22 @@ client.once('ready', () => {
         return;
       else return await guild.channels.cache.get( guild.channelWatch.log ).send(message);
     };
+    guild.checkIsMod = function(author){
+      let member = guild.members.cache.get( author.id );
+      if( member ) {
+        for( const role of guild.moderators ) {
+          if (member._roles.includes(role) )
+            return true;
+        }
+      };
+      return false;
+    };
     guild.autosave = cron.schedule('0 11 * * *', async () => {
       console.log('[Main] Daily tasks starting');
       guild.sayToLog("Starting daily tasks...");
-      let msg = await guild.sayToLog('Daily autosave completed, now running autorole.');
       client.registry.commands.get('config').run(msg, {action:'save',verbose:'false'});
-      client.registry.commands.get('autorole').run(msg);
+      let msg = await guild.sayToLog('Daily autosave completed, now running autorole.');
+      await client.registry.commands.get('autorole').run(msg, {args: ''});
       console.log('[Main] Daily tasks finished.');
       guild.sayToLog("Daily tasks finished.");
     });
