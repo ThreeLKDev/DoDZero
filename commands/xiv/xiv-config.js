@@ -53,7 +53,7 @@ module.exports = class XIVCommand extends Command {
             return true;
           } else return false;
         } );
-      }
+      } else mention = mention[1];
 
       if( mention ) {
         message.guild.xiv.iamRole = mention;
