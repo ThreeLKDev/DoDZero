@@ -2,7 +2,6 @@ require('dotenv').config();
 const { Command } = require('discord.js-commando');
 const XIVAPI = require('xivapi-js');
 const xiv = new XIVAPI({ private_key: process.env.XIVAPI });
-const cron = require('node-cron');
 
 module.exports = class AutoRoleCommand extends Command {
   constructor(client){
@@ -12,12 +11,56 @@ module.exports = class AutoRoleCommand extends Command {
       memberName: 'autorole',
       description: 'Ensure all FC members\' roles reflect their ranks.',
       guildOnly: true,
-      args: []
+      args: [
+        {
+          key: 'args',
+          prompt: '',
+          type: 'string',
+          default: ''
+        }
+      ]
     });
   }
-  async run( message ) {
+  async run( message, { args } ) {
+        let skipped = message.guild.autoRole.skipped;
+        if( args && ( args === 'debug' || args === 'report' ) ) {
+          console.log("Autorole debug");
+          if( skipped.missingNickname.length + skipped.invalidCharID.length +
+             skipped.outrank.length + skipped.away.length > 0 ) {
+               message.guild.sayToLog(`Last autorole skipped:\n`
+                + `'Missing' nicknames: `
+                + `${(skipped.missingNickname.length > 0
+                  ? `\n\t` + skipped.missingNickname.join(`\n\t`)
+                  : `none`)}\n`
+                + `Invalid CharIDs: `
+                + `${(skipped.invalidCharID.length > 0
+                  ? `\n\t` + skipped.invalidCharID.join(`\n\t`)
+                  : `none`)}\n`
+                + `Away: `
+                + `${(skipped.away.length > 0
+                  ? `\n\t` + skipped.away.join(`\n\t`)
+                  : `none`)}\n`
+                + `Outrank: `
+                + `${(skipped.outrank.length > 0
+                  ? `\n\t` + skipped.outrank.join(`\n\t`)
+                  : `none`)}`);
+             } else {
+               console.log("Nothing to report.");
+               message.guild.sayToLog("Nothing to report.");
+             }
+          return;
+        }
         console.log('[autorole] Task running...');
         message.guild.sayToLog("Starting autorole...");
+        console.log("Clearing old 'skipped' tracker...")
+        skipped.missingNickname.length = 0;
+        skipped.invalidCharID.length = 0;
+        skipped.outrank.length = 0;
+        skipped.away.length = 0;
+        let botRolePosition = 0;
+        for( let botRole of message.guild.me._roles ){
+          botRolePosition = Math.max( botRolePosition, message.guild.roles.cache.get( botRole ).rawPosition );
+        }
 
         let query = await xiv.freecompany.get(message.channel.guild.freeCompany.ID, {
           extended: true, data: 'FCM', columns: ['FreeCompanyMembers.*.Rank','FreeCompanyMembers.*.ID','FreeCompanyMembers.*.Name', 'FreeCompany.Server'].join(',')});
@@ -44,6 +87,9 @@ module.exports = class AutoRoleCommand extends Command {
           let numNoNick = 0;
           let numNoChar = 0;
           let numAway = 0;
+          let numOutrank = 0;
+          let numTotalChanges = 0;
+          let numTotalSkipped = 0;
           let changelog = "";
           for( let member of guildMembers ){
             console.log(`[autorole] [ ${count++} / ${max} ]`);
@@ -56,6 +102,7 @@ module.exports = class AutoRoleCommand extends Command {
               if( member.nickname == null ) {
                 console.log(`[autorole] CharID for '${member.user.username}' not in database. No nickname, skipping.`);
                 numNoNick++;
+                skipped.missingNickname.push(member.user.username);
                 continue;
               }
               console.log(`[autorole] CharID for '${member.nickname}' not in database, looking up...`);
@@ -82,6 +129,7 @@ module.exports = class AutoRoleCommand extends Command {
             if(!charID) {
               console.log('[autorole] Null CharID, skipping...');
               numNoChar++;
+              skipped.invalidCharID.push(member.nickname);
               continue;
             }
             console.log('[autorole] Checking CharID against known members...');
@@ -97,14 +145,19 @@ module.exports = class AutoRoleCommand extends Command {
                 }
                 if( role != null ) {
                   console.log(`[autorole] Appropriate role found for FC Rank ${fcMembers[i].Rank}`);
+                  let rolePosition = role.rawPosition;
+                  if( role.rawPosition > botRolePosition ) {
+                    console.log(`[autorole] Role for FC Rank ${fcMembers[i].Rank} [ ${role.rawPosition} ] greater than bot [ ${botRolePosition} ]`);
+                  }
                   let memberRoles = message.guild.members.cache.get( member.user.id )._roles;
                   let hasRole = false;
                   let hasAwayRole = false;
                   for( let memberRole of memberRoles ){
                     for( let awayRole of message.guild.autoRole.awayRoles ){
                       if( awayRole.id == role.id ) {
-                        hasAwayRole = true;
+                        hasAwayRole = true; // Only applies if their in-game FC Rank is an Away Role
                         numAway++;
+                        skipped.away.push(member.nickname);
                         break;
                       }
                     }
@@ -114,35 +167,32 @@ module.exports = class AutoRoleCommand extends Command {
                     }
                     for( let progressionRole of message.guild.autoRole.progressionRoles ){
                       if( progressionRole.id == memberRole && !hasAwayRole ){
-                        console.log(`[autorole] Removing role '${progressionRole.name}' from ${member.nickname ? member.nickname : member.user.username}`);
-                        numRemovals++;
-                        let errored = false;
-                        try {
+                        if( role.rawPosition > botRolePosition ) {
+                          numOutrank++;
+                          console.log(`[autorole] Role '${progressionRole.name}' should be removed from ${member.nickname ? member.nickname : member.user.username}`);
+                          message.guild.sayToLog(`**Role '${progressionRole.name}' should be removed from ${member.nickname ? member.nickname : member.user.username}**`);
+                        } else {
+                          numRemovals++;
+                          console.log(`[autorole] Removing role '${progressionRole.name}' from ${member.nickname ? member.nickname : member.user.username}`);
+                          message.guild.sayToLog(`*Removing role '${progressionRole.name}' from ${member.nickname ? member.nickname : member.user.username}*`);
                           member.roles.remove( message.guild.roles.cache.get(progressionRole.id) );
-                        } catch( error ){
-                          console.error( error );
-                          errored = true;
-                          message.guild.sayToLog(`Autorole: Can't remove role '${progressionRole.name}' from ${member.nickname ? member.nickname : member.user.username} (insufficient permission?)`);
                         }
-                        if(!errored)
-                          message.guild.sayToLog(`Autorole: Removing role '${progressionRole.name}' from ${member.nickname ? member.nickname : member.user.username}`);
                         break;
                       }
                     }
                   }
                   if( !hasRole ) {
-                    numAdditions++;
-                    console.log(`[autorole] Adding role '${role.name}' to '${member.nickname ? member.nickname : member.user.username}'`);
-                    let errored = false;
-                    try {
+                    if( role.rawPosition > botRolePosition ){
+                      numOutrank++;
+                      skipped.outrank.push(member.nickname);
+                      console.log(`[autorole] Role '${role.name}' should be given to ${member.nickname ? member.nickname : member.user.username}`);
+                      message.guild.sayToLog(`**Role '${role.name}' should be given to ${member.nickname ? member.nickname : member.user.username}**`);
+                    } else {
+                      numAdditions++;
+                      console.log(`[autorole] Adding role '${role.name}' to ${member.nickname ? member.nickname : member.user.username}`);
+                      message.guild.sayToLog(`*Adding role '${role.name}' to ${member.nickname ? member.nickname : member.user.username}*`);
                       member.roles.add(role);
-                    } catch( error ){
-                      console.log(error);
-                      errored = true;
-                      message.guild.sayToLog(`Autorole: Can't add role '${role.name}' to ${member.nickname ? member.nickname : member.user.username} (insufficient permission?)`);
                     }
-                    if(!errored)
-                      message.guild.sayToLog(`Autorole: Adding role '${role.name}' to ${member.nickname ? member.nickname : member.user.username}`);
                   }
                 }
                 fcMembers.splice(i,1);
@@ -160,7 +210,21 @@ module.exports = class AutoRoleCommand extends Command {
             }
           }
           console.log('[autorole] Task finished.');
-          message.guild.sayToLog(`Autorole: Finished. Changelog: \n\tMade ${numAdditions + numRemovals} changes -> ${numAdditions} additions + ${numRemovals} removals\n\t${numNoNick + numNoChar + numAway} skipped -> ${numNoNick} missing nicknames + ${numNoChar} invalid/null charID (couldn't match to any known FC member) + ${numAway} in designated Away role(s)`);
+          numTotalChanges = numAdditions + numRemovals;
+          numTotalSkipped = numNoNick + numNoChar + numAway + numOutrank;
+          message.guild.sayToLog(`Autorole: Finished. Changelog:\n`
+            + `\tMade ${numTotalChanges} change${ numTotalChanges == 1 ? '' : 's' }`
+            + ( numTotalChanges > 0 ? ` :\n`
+              + ( numAdditions > 0 ? `\t\t-> ${numAdditions} additions\n` : `` )
+              + ( numRemovals > 0 ? `\t\t-> ${numRemovals} removals\n` : `` )
+            : `.\n` )
+            + `\tSkipped ${ (numTotalSkipped == 1 ? "1 member" : `${numTotalSkipped} members` ) }`
+            + ( numTotalSkipped > 0 ? ` :\n`
+              + ( numNoNick > 0 ? `\t\t-> ${numNoNick} missing nickname${ numNoNick == 1 ? '' : 's'}\n` : `` )
+              + ( numNoChar > 0 ? `\t\t-> ${numNoChar} invalid/null charID (couldn't match to any known FC member)\n` : `` )
+              + ( numAway > 0 ? `\t\t-> ${numAway} in designated Away role(s)\n` : `` )
+              + ( numOutrank > 0 ? `\t\t-> ${numOutrank} in role(s) that outrank me` : `` )
+            : '.' ) );
           db.close( (err) => { return err ? console.error(err.message) : console.log('Members.db closed.') });
         });
       }
