@@ -35,7 +35,7 @@ module.exports = class PixivCommand extends Command {
     } );
   }
   async run(message, { pixivUrl, which }) {
-    console.log(`RUN:\n\tpixivUrl:${pixivUrl}\n\twhich:${which}`);
+    console.log(`[pixiv] Pixiv url posted in tracked channel: ${pixivUrl}${which ? ' [ ' + which + ' ]' : '' }`);
     // Validate pixiv url and get image url
     //https://www.pixiv.net/en/artworks/83241640
     if( which ) {
@@ -44,28 +44,21 @@ module.exports = class PixivCommand extends Command {
         which = which.split(' ').join(',');
       if( which.includes(',') && !which.includes('[') )
         which = `[${which}]`;
-      console.log('Pre-JSON which: ' + which);
       which = JSON.parse(which);
-      console.log('Which: ' + which + (Array.isArray(which) ? ' is Array' : ' not an array'));
     }
     let url = null;
     let urls = null;
-    let id = pixivUrl.match( /https:\/\/www\.pixiv\.net(?:\/en)\/artworks\/([0-9]+)/ );
+    let id = pixivUrl.match( /https:\/\/www\.pixiv\.net(?:\/en)?\/artworks\/([0-9]+)/ );
     if( id ) {
       message.channel.startTyping();
-      console.log('ID!');
-      console.log(id);
       await pixiv.login();
       let query = await pixiv.illustDetail(id[1]);
       //Check if real!
       if( query.illust ) {
-        console.log('Illust!')
         if( !PixivCommand.isEmpty(query.illust.metaSinglePage) ) {
-          console.log('Single page!')
           url = query.illust.metaSinglePage.originalImageUrl ? query.illust.metaSinglePage.originalImageUrl : PixivCommand.getBestUrl(query.illust.imageUrls);
         }
         if( query.illust.metaPages.length > 0 ) {
-          console.log('Multi page!')
           //Multi-page work
           urls = [];
           for( let i = 0; i < query.illust.metaPages.length; i++ ) {
@@ -78,7 +71,6 @@ module.exports = class PixivCommand extends Command {
               urls = null;
             }
             if( Array.isArray( which ) && which.length > 0 ) {
-              console.log('Which is array of length ' + which.length);
               let whichUrls = [];
               for( let i = 0; i < which.length; i++ ) {
                 if( Number.isInteger(which[i]) ) {
@@ -115,7 +107,6 @@ module.exports = class PixivCommand extends Command {
     }
 
     for( let k = 0; k < list.length; k++ ) {
-      console.log(list[k]);
       // if( pageLimit > 0 && k >= pageLimit ) break;
       const response = await got(list[k], options);
   		const img = new Image();
