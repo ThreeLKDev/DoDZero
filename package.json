@@ -28,7 +28,7 @@
     "pixiv-app-api": "^0.3.0",
     "simple-youtube-api": "^5.2.1",
     "sqlite": "^4.0.19",
-    "sqlite3": "^5.0.1",
+    "sqlite3": "^5.0.3",
     "stream-to-array": "^2.3.0",
     "xivapi-js": "^0.3.0",
     "ytdl-core": "^2.1.7"
