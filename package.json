@@ -13,7 +13,7 @@
     "url": "https://github.com/ThreeLKDev/DoDZero"
   },
   "dependencies": {
-    "@discordjs/opus": "^0.3.3",
+    "@discordjs/opus": "^0.8.0",
     "@types/better-sqlite3": "^5.4.1",
     "canvas": "^2.6.1",
     "cheerio": "^1.0.0-rc.5",
