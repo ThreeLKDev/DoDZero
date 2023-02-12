@@ -22,7 +22,7 @@
     "discord.js-commando": "github:discordjs/Commando",
     "dotenv": "^8.2.0",
     "ffmpeg-static": "^2.7.0",
-    "got": "^11.8.1",
+    "got": "^12.5.3",
     "iso-639-1": "^2.1.5",
     "node-cron": "^2.0.3",
     "pixiv-app-api": "^0.3.0",
